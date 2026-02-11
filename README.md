@@ -1,9 +1,6 @@
-# FinWise AI — Flutter Fintech Application
+# FinWise AI — Enterprise Flutter Fintech App
 
-FinWise AI is an **enterprise-grade Flutter fintech application** built with long-term scalability, maintainability, and production safety as first-class goals.
-
-This project follows **Clean Architecture + Feature-first design** and is structured to support future growth without architectural rewrites.
-
+FinWise AI is an **enterprise-grade Flutter fintech application** built with a strong focus on **scalability, maintainability, security, and production safety**.
 
 ---
 
@@ -25,18 +22,19 @@ This project follows **Clean Architecture + Feature-first design** and is struct
 
 ## 🧱 Architecture Overview
 
-The app follows a **layered, unidirectional flow**:
+The application follows a **strict unidirectional data flow**:
 
 UI → Provider → UseCase → Repository → DataSource → API
 
+yaml
 
 
-### Why this matters:
+### Why this matters
 - Business logic is testable
-- UI remains dumb & replaceable
+- UI remains presentation-only
 - Networking is centralized
 - Storage is abstracted
-- Features don’t leak into each other
+- Features do not leak into each other
 
 ---
 
@@ -77,6 +75,10 @@ lib/
 │
 └── main.dart
 
+yaml
+
+
+This structure is **non-negotiable**.
 
 ---
 
@@ -84,11 +86,11 @@ lib/
 
 | Concern | Technology |
 |------|-----------|
-| State management | Riverpod |
+| State Management | Riverpod |
 | Navigation | GoRouter |
 | Networking | Dio |
 | Models | Freezed + JSON Serializable |
-| Local storage | Hive |
+| Local Storage | Hive |
 | Charts | fl_chart |
 | Icons | flutter_svg |
 | Fonts | google_fonts |
@@ -96,18 +98,96 @@ lib/
 | Logging | logger |
 | Architecture | Clean Architecture + Feature-first |
 
-> Stack changes require architectural justification.
+Stack changes require architectural justification.
 
 ---
 
-## 🔐 Authentication Strategy
+## 🔐 Authentication (IMPLEMENTED)
 
-- **JWT-based authentication**
-- Access token: short-lived (memory)
-- Refresh token: long-lived (Hive)
-- Auto-refresh handled via Dio interceptor
-- Auth state managed centrally via Riverpod
-- UI never handles tokens directly
+### Strategy
+- JWT-based authentication
+- Access token (short-lived, memory)
+- Refresh token (long-lived, Hive)
+- Automatic token refresh via Dio interceptor
+- Auth state restored on app restart
+
+### Token Lifecycle
+
+Login API
+→ accessToken (memory)
+→ refreshToken (Hive)
+→ AuthState.authenticated
+
+API Request
+→ Authorization header injected automatically
+
+401 Response
+→ refresh-token API called
+→ new tokens saved
+→ original request retried
+
+Refresh Failure
+→ tokens cleared
+→ AuthState.unauthenticated
+
+yaml
+
+
+### Rules
+- UI never handles tokens
+- UI never calls refresh APIs
+- Tokens are managed centrally
+- Logout clears both memory and storage
+
+---
+
+## 📡 Networking Architecture (IMPLEMENTED)
+
+### API Client
+- Single centralized Dio instance
+- Environment-based base URL
+- Timeouts configured
+- Logging enabled only in development
+
+### Interceptors
+- **AuthInterceptor**
+  - Injects access token
+  - Handles 401 responses
+  - Refreshes tokens safely
+  - Retries failed requests
+  - Prevents refresh storms
+
+### Networking Rules
+- Features never create their own Dio instances
+- All HTTP traffic flows through `ApiClient`
+- Interceptors handle auth, logging, and retries
+
+---
+
+## 🗄️ Local Storage (IMPLEMENTED)
+
+### Hive Usage
+Hive is used for:
+- Refresh token persistence
+- Session restoration on app restart
+
+### Storage Rules
+- Hive is accessed **only** inside `core/storage`
+- Providers and UI never open Hive boxes
+- Storage is abstracted via `TokenStorage`
+
+---
+
+## 🔀 Routing & Guards (IMPLEMENTED)
+
+- GoRouter used for navigation
+- Centralized route definitions
+- `SplashGate` controls initial routing
+- Auth-aware redirection:
+  - authenticated → dashboard
+  - unauthenticated → login
+
+Screens never perform navigation decisions.
 
 ---
 
@@ -119,6 +199,7 @@ Supported environments:
 .env.staging
 .env.prod
 
+yaml
 
 
 Each environment defines:
@@ -126,114 +207,75 @@ Each environment defines:
 - log level
 - runtime behavior
 
-No hardcoded URLs.  
-No secrets in code.
+Environment files are **never committed**.
 
 ---
 
-## 🚦 Navigation Rules
+## 🔗 API Endpoints (Current Backend Assumptions)
 
-- All navigation is centralized via GoRouter
-- Route guards are auth-aware
-- Screens never decide navigation logic
-- SplashGate is the single entry decision point
+> These are backend contract assumptions and may change once finalized.
 
----
+POST /auth/login
+POST /auth/refresh
+POST /auth/logout
 
-## 🧠 State Management Rules
+csharp
 
-- Providers contain business logic
-- UI consumes state only
-- No API calls in widgets
-- No storage access in UI
-- No navigation inside providers (except via router logic)
 
----
+### Expected Request Payloads
 
-## 📡 Networking Rules
+```json
+// login
+{
+  "email": "string",
+  "password": "string"
+}
 
-- Features never call Dio directly
-- All API access goes through repositories
-- Interceptors handle:
-  - auth headers
-  - token refresh
-  - retries
-  - logging
-  - error mapping
+// refresh
+{
+  "refreshToken": "string"
+}
+Expected Response
+json
 
----
-
-## ❗ Error Handling Philosophy
-
-Every async operation supports:
-
-- Loading
-- Success
-- Empty
-- Error
-
-No silent failures.  
-No swallowed exceptions.
-
----
-
-## 💾 Offline & Storage Strategy
-
-- Hive is used for:
-  - auth persistence
-  - session cache
-  - user preferences
-  - offline fallback
-- Hive access is restricted to `core/storage`
-
----
-
-## 🧪 Test Readiness
-
+{
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+🧪 Test Readiness
 The architecture supports:
-- provider unit tests
-- repository tests
-- model serialization tests
 
-Test folder mirrors `lib/` structure.
+Provider unit tests
 
----
+Repository tests
 
-## 🛑 Coding Rules (Non-Negotiable)
+Model serialization tests
 
-### NEVER:
-- Mix UI and business logic
-- Call APIs inside widgets
-- Access Hive outside core/storage
-- Hardcode styles or dimensions
-- Bypass provider layer
-- Add random packages
+Test folder mirrors the lib/ structure.
 
-### ALWAYS:
-- Keep files small & focused
-- Follow feature boundaries
-- Use centralized systems
-- Write predictable code
-- Think production-first
+🚫 Non-Negotiable Coding Rules
+NEVER
+Call APIs in widgets
 
----
+Access Hive outside core/storage
 
-## 🚀 Development Workflow
+Handle tokens in UI
 
-1. Architecture first
-2. Domain logic second
-3. UI last
-4. Test continuously
-5. No blind releases
+Perform navigation inside screens
 
----
+Duplicate Dio instances
 
-## 🧭 Status
+Hardcode styles or dimensions
 
-- Foundation: ✅ Completed
-- Environment setup: ✅ Completed
-- Routing: ✅ Completed
-- Auth architecture: 🟡 In progress
-- UI: ⏳ Pending (Figma)
+Bypass provider layer
 
----
+ALWAYS
+Keep UI presentation-only
+
+Centralize business logic
+
+Respect feature boundaries
+
+Use shared infrastructure
+
+Write predictable, testable code

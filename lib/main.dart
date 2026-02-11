@@ -1,25 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/utils/env.dart';
 import 'core/router/app_router.dart';
+import 'services/data/supabase_client_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize local storage
+  await Hive.initFlutter();
+
+  // Load environment variables
   await Env.load(envFile: '.env.dev');
 
-  runApp(const ProviderScope(child: FinWiseApp()));
+  // Initialize Supabase
+  await SupabaseInitializer.initialize();
+
+  runApp(
+    const ProviderScope(
+      child: FinWiseApp(),
+    ),
+  );
 }
 
-class FinWiseApp extends StatelessWidget {
+class FinWiseApp extends ConsumerWidget {
   const FinWiseApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }
