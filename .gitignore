@@ -44,3 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Environment configuration (DO NOT COMMIT)
+.env.dev
+.env.staging
+.env.prod
