@@ -3,14 +3,31 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color transparent = Colors.transparent;
+  // Primary Brand
+  static const Color primary = Color(0xFF2DBE7F);
+  static const Color primaryDark = Color(0xFF1E8F60);
 
-  // Placeholder tokens — values will come from Figma
-  static const Color primary = Color(0xFF000000);
-  static const Color secondary = Color(0xFF000000);
+  // Backgrounds
+  static const Color background = Color(0xFFF5F6F8);
+  static const Color card = Colors.white;
 
-  static const Color background = Color(0xFFFFFFFF);
-  static const Color surface = Color(0xFFFFFFFF);
+  // Text
+  static const Color textPrimary = Color(0xFF1E1E1E);
+  static const Color textSecondary = Color(0xFF7A7A7A);
 
-  static const Color error = Color(0xFFD32F2F);
+  // Status
+  static const Color success = Color(0xFF2DBE7F);
+  static const Color danger = Color(0xFFE74C3C);
+
+  // Divider
+  static const Color divider = Color(0xFFE0E0E0);
+
+  // Chart highlight
+  static const Color accentYellow = Color(0xFFFFC107);
+
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFF34C759), Color(0xFF1FAF5A)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }

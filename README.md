@@ -1,3 +1,219 @@
+Flutter Fintech App
+
+A production-ready Flutter fintech application built with scalable architecture, secure authentication (JWT + Google Login), local database caching, and Node.js backend integration.
+
+🏗️ Architecture Overview
+
+The project follows clean + scalable architecture principles.
+
+lib/
+│
+├── core/
+│   ├── theme/
+│   ├── router/
+│   ├── utils/
+│   └── constants/
+│
+├── features/
+│   ├── auth/
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   │
+│   └── dashboard/
+│
+├── shared/
+│
+└── main.dart
+
+🧠 State Management
+
+Riverpod
+
+Global auth state handling
+
+Provider-based dependency injection
+
+🔐 Authentication System
+Implemented:
+
+✅ JWT Login
+✅ JWT Storage (Secure)
+✅ Google Login
+✅ Auth State Navigation
+✅ Auto Redirect (if token exists)
+
+Auth Flow
+User → Login Screen
+     → Backend (Node.js)
+     → JWT Returned
+     → Stored Securely
+     → Riverpod updates state
+     → Router redirects to Dashboard
+
+🌐 Backend
+
+Backend is built with:
+
+Node.js
+
+Express
+
+JWT Authentication
+
+Google OAuth verification
+
+Backend Structure:
+
+backend/
+├── config/
+├── controllers/
+├── middleware/
+├── models/
+├── routes/
+└── server.js
+
+🗄️ Local Database
+
+Hive (Flutter local DB)
+
+Used for:
+
+Token caching
+
+User persistence
+
+Offline capability
+
+📱 Current App Flow
+
+App Starts
+
+Env Loaded
+
+Hive Initialized
+
+Check JWT
+
+If token exists → Dashboard
+
+Else → Login
+
+✅ Completed Features
+
+Clean folder architecture
+
+Theming system
+
+Centralized routing
+
+JWT login
+
+Google login
+
+Secure token storage
+
+Backend connectivity
+
+Auth-based navigation
+
+Hive local storage
+
+Environment configuration
+
+🚧 Pending Features
+
+Transaction module
+
+Wallet module
+
+Profile management
+
+Error handling refinement
+
+API interceptor
+
+Production logging
+
+CI/CD pipeline
+
+Deployment configs
+
+🛠️ Tech Stack
+Frontend
+
+Flutter
+
+Riverpod
+
+Hive
+
+GoRouter
+
+Backend
+
+Node.js
+
+Express
+
+JWT
+
+MongoDB
+
+⚙️ Environment Setup
+
+Create .env inside project:
+
+BASE_URL=http://localhost:5000
+
+▶️ Running the App
+1️⃣ Install Dependencies
+flutter pub get
+
+2️⃣ Run
+flutter run
+
+🔐 Security Notes
+
+JWT is securely stored
+
+Sensitive configs are in .env
+
+No secrets committed to repository
+
+🚀 Deployment Strategy (Planned)
+
+Backend → VPS / Render / Railway
+
+Flutter → Play Store
+
+CI/CD → GitHub Actions
+
+Environment-based builds
+
+👨‍💻 Developer Notes
+
+This project follows a single consistent architecture flow.
+All future features must follow:
+
+Feature-first structure
+
+Separation of concerns
+
+Clean routing
+
+Centralized API layer
+
+Do NOT break existing auth flow.
+
+📌 Project Status
+
+🟢 Foundation Complete
+🟡 Core Modules Pending
+
+
+
+
 # FinWise AI — Enterprise Flutter Fintech App
 
 FinWise AI is an **enterprise-grade Flutter fintech application** built with a strong focus on **scalability, maintainability, security, and production safety**.

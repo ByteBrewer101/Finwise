@@ -6,12 +6,13 @@ class AppTheme {
 
   static ThemeData light() {
     return ThemeData(
-      useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        error: AppColors.error,
+      primaryColor: AppColors.primary,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.primary,
+        secondary: AppColors.primaryDark,
       ),
+      useMaterial3: true,
     );
   }
 }
