@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_radius.dart';
+
+import 'package:finwise/core/theme/app_colors.dart';
+import 'package:finwise/core/theme/app_radius.dart';
+import 'package:finwise/core/theme/app_spacing.dart';
 
 class BalanceSection extends StatelessWidget {
   final double amount;
+  final String currencySymbol;
 
   const BalanceSection({
     super.key,
     required this.amount,
+    this.currencySymbol = '₹',
   });
 
   @override
@@ -43,7 +46,7 @@ class BalanceSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
 
             Text(
-              '\$${amount.toStringAsFixed(2)}',
+              '$currencySymbol${amount.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

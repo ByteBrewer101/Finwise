@@ -6,13 +6,12 @@ class AuthNotifier extends ChangeNotifier {
   late final StreamSubscription<AuthState> _subscription;
 
   AuthNotifier() {
-    _subscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen(
-      (data) {
-        notifyListeners();
-      },
-    );
+    _subscription = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+      notifyListeners();
+    });
   }
+
+  bool get isAuthenticated => Supabase.instance.client.auth.currentUser != null;
 
   @override
   void dispose() {
@@ -20,3 +19,22 @@ class AuthNotifier extends ChangeNotifier {
     super.dispose();
   }
 }
+
+// class AuthNotifier extends ChangeNotifier {
+//   late final StreamSubscription<AuthState> _subscription;
+
+//   AuthNotifier() {
+//     _subscription =
+//         Supabase.instance.client.auth.onAuthStateChange.listen(
+//       (data) {
+//         notifyListeners();
+//       },
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     _subscription.cancel();
+//     super.dispose();
+//   }
+// }
