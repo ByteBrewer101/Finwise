@@ -1,40 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/datasource/budget_remote_datasource.dart';
+import '../../data/repository/budget_repository_impl.dart';
 import '../../domain/models/budget.dart';
+import '../../domain/repository/budget_repository.dart';
 
-final budgetProvider =
-    StateNotifierProvider<BudgetNotifier, List<Budget>>(
-  (ref) => BudgetNotifier(),
-);
+final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  final client = Supabase.instance.client;
+  return BudgetRepositoryImpl(
+    BudgetRemoteDataSource(client),
+  );
+});
 
-class BudgetNotifier extends StateNotifier<List<Budget>> {
-  BudgetNotifier() : super(const []);
-
-  final _uuid = const Uuid();
-
-  void addBudget({
-    required String name,
-    required double amount,
-    required String category,
-    required String wallet,
-    required String recurrence,
-    required DateTime startDate,
-  }) {
-    final newBudget = Budget(
-      id: _uuid.v4(),
-      name: name,
-      amount: amount,
-      category: category,
-      wallet: wallet,
-      recurrence: recurrence,
-      startDate: startDate,
-    );
-
-    state = [...state, newBudget];
-  }
-
-  void removeBudget(String id) {
-    state = state.where((b) => b.id != id).toList();
-  }
-}
+final budgetListProvider = FutureProvider<List<Budget>>((ref) async {
+  final repo = ref.watch(budgetRepositoryProvider);
+  return repo.getBudgets();
+});

@@ -7,16 +7,19 @@ import 'package:finwise/core/theme/app_radius.dart';
 import 'package:finwise/core/theme/app_colors.dart';
 import 'package:finwise/core/theme/app_text_styles.dart';
 
+import '../../domain/models/budget.dart';
 import '../providers/budget_provider.dart';
 
 class SetBudgetScreen extends ConsumerStatefulWidget {
   const SetBudgetScreen({super.key});
 
   @override
-  ConsumerState<SetBudgetScreen> createState() => _SetBudgetScreenState();
+  ConsumerState<SetBudgetScreen> createState() =>
+      _SetBudgetScreenState();
 }
 
-class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
+class _SetBudgetScreenState
+    extends ConsumerState<SetBudgetScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _budgetNameController = TextEditingController();
@@ -49,33 +52,45 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
-        _startDateController.text = DateFormat('dd MMM yyyy').format(picked);
+        _startDateController.text =
+            DateFormat('dd MMM yyyy').format(picked);
       });
     }
   }
 
-  void _createBudget() {
+  Future<void> _createBudget() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ref
-        .read(budgetProvider.notifier)
-        .addBudget(
-          name: _budgetNameController.text,
-          amount: double.parse(_amountController.text),
-          category: _category!,
-          wallet: _wallet!,
-          recurrence: _recurrence!,
-          startDate: _selectedDate!,
-        );
+    final repo = ref.read(budgetRepositoryProvider);
 
-    Navigator.pop(context);
+    final newBudget = Budget(
+      id: '',
+      name: _budgetNameController.text,
+      amount: double.parse(_amountController.text),
+      category: _category!,
+      wallet: _wallet!,
+      recurrence: _recurrence!,
+      startDate: _selectedDate!,
+    );
+
+    await repo.addBudget(newBudget);
+
+    // 🔥 Refresh list after insert
+    ref.invalidate(budgetListProvider);
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set New Budget', style: AppTextStyles.headingMedium),
+        title: const Text(
+          'Set New Budget',
+          style: AppTextStyles.headingMedium,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -105,28 +120,32 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   label: 'Currency',
                   value: _currency,
                   items: const ['INR'],
-                  onChanged: (val) => setState(() => _currency = val),
+                  onChanged: (val) =>
+                      setState(() => _currency = val),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _buildDropdown(
                   label: 'Wallet',
                   value: _wallet,
                   items: const ['Cash', 'Cashless'],
-                  onChanged: (val) => setState(() => _wallet = val),
+                  onChanged: (val) =>
+                      setState(() => _wallet = val),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _buildDropdown(
                   label: 'Category',
                   value: _category,
                   items: const ['Food', 'Pets', 'Fashion'],
-                  onChanged: (val) => setState(() => _category = val),
+                  onChanged: (val) =>
+                      setState(() => _category = val),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _buildDropdown(
                   label: 'Recurrence',
                   value: _recurrence,
                   items: const ['Monthly', 'Weekly'],
-                  onChanged: (val) => setState(() => _recurrence = val),
+                  onChanged: (val) =>
+                      setState(() => _recurrence = val),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
@@ -134,10 +153,13 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   readOnly: true,
                   decoration: _inputDecoration(
                     'Start Date',
-                  ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Select start date'
-                      : null,
+                  ).copyWith(
+                      suffixIcon:
+                          const Icon(Icons.calendar_today)),
+                  validator: (value) =>
+                      value == null || value.isEmpty
+                          ? 'Select start date'
+                          : null,
                   onTap: _pickDate,
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -147,9 +169,11 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                     onPressed: _createBudget,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      minimumSize: const Size(double.infinity, 52),
+                      minimumSize:
+                          const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        borderRadius: BorderRadius.circular(
+                            AppRadius.lg),
                       ),
                     ),
                     child: const Text(
@@ -178,9 +202,12 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      decoration: _inputDecoration(label).copyWith(prefixText: prefix),
+      decoration:
+          _inputDecoration(label).copyWith(prefixText: prefix),
       validator: (value) =>
-          value == null || value.isEmpty ? 'Enter $label' : null,
+          value == null || value.isEmpty
+              ? 'Enter $label'
+              : null,
     );
   }
 
@@ -191,13 +218,15 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: _inputDecoration(label),
       items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map((item) =>
+              DropdownMenuItem(value: item, child: Text(item)))
           .toList(),
       onChanged: onChanged,
-      validator: (value) => value == null ? 'Select $label' : null,
+      validator: (value) =>
+          value == null ? 'Select $label' : null,
     );
   }
 }
@@ -208,18 +237,22 @@ InputDecoration _inputDecoration(String label) {
     labelStyle: AppTextStyles.body,
     filled: true,
     fillColor: AppColors.card,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.lg),
-      borderSide: const BorderSide(color: AppColors.divider),
+      borderSide:
+          const BorderSide(color: AppColors.divider),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.lg),
-      borderSide: const BorderSide(color: AppColors.divider),
+      borderSide:
+          const BorderSide(color: AppColors.divider),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.lg),
-      borderSide: const BorderSide(color: AppColors.primary),
+      borderSide:
+          const BorderSide(color: AppColors.primary),
     ),
   );
 }
