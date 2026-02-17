@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/app_input_field.dart';
+import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/section_header.dart';
+
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -50,54 +55,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Create FinWise Account',
-              style: TextStyle(fontSize: 22),
-            ),
-            const SizedBox(height: 24),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionHeader(title: "Create Account"),
 
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
+                  const SizedBox(height: AppSpacing.xl),
 
-            const SizedBox(height: 16),
+                  AppInputField(controller: _emailController, label: "Email"),
 
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
+                  const SizedBox(height: AppSpacing.lg),
 
-            const SizedBox(height: 24),
+                  AppInputField(
+                    controller: _passwordController,
+                    label: "Password",
+                    obscureText: true,
+                  ),
 
-            if (_error != null)
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                  if (_success != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Text(
+                        _success!,
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                    ),
+
+                  PrimaryButton(
+                    label: 'Register',
+                    onPressed: _isLoading ? null : _register,
+                    isLoading: _isLoading,
+                  ),
+                ],
               ),
-
-            if (_success != null)
-              Text(
-                _success!,
-                style: const TextStyle(color: Colors.green),
-              ),
-
-            const SizedBox(height: 12),
-
-            ElevatedButton(
-              onPressed: _isLoading ? null : _register,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Register'),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/providers/shared_prefs_provider.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/utils/env.dart';
@@ -10,18 +12,22 @@ import 'services/data/supabase_client_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize local storage
+  // Initialize Hive
   await Hive.initFlutter();
 
-  // Load environment variables
+  // Load env
   await Env.load(envFile: '.env.dev');
 
   // Initialize Supabase
   await SupabaseInitializer.initialize();
 
+  // Initialize SharedPreferences ONCE
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(
-      child: FinWiseApp(),
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const FinWiseApp(),
     ),
   );
 }

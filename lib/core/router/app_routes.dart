@@ -4,6 +4,7 @@ class AppRoutes {
   static const splash = '/';
   static const login = '/login';
   static const register = '/register';
+static const onboarding = '/onboarding';
 
   // Main shell root
   static const home = '/home';

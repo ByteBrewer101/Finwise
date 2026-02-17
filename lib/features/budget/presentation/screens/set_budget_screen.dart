@@ -87,7 +87,7 @@ class _SetBudgetScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title:  Text(
           'Set New Budget',
           style: AppTextStyles.headingMedium,
         ),

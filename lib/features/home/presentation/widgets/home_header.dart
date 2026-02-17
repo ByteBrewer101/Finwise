@@ -22,8 +22,7 @@ class HomeHeader extends ConsumerWidget {
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Welcome Back', style: AppTextStyles.body),
+            children: [Text('Welcome Back', style: AppTextStyles.body),
               Text(userName, style: AppTextStyles.headingMedium),
             ],
           ),

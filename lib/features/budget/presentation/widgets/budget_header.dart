@@ -6,7 +6,7 @@ class BudgetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
+    return  Text(
       'Budget',
       style: AppTextStyles.headingLarge,
     );

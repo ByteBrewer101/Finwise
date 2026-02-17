@@ -69,7 +69,7 @@ class _AddTransactionScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title:  Text(
           'Add Transaction',
           style: AppTextStyles.headingMedium,
         ),

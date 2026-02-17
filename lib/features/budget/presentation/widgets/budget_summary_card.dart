@@ -48,7 +48,7 @@ class BudgetSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// Title
-          const Text('Total Balance', style: AppTextStyles.body),
+           Text('Total Balance', style: AppTextStyles.body),
 
           const SizedBox(height: AppSpacing.sm),
 

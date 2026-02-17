@@ -14,7 +14,7 @@ class CategoriesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text('Categories', style: AppTextStyles.headingMedium),
         ),

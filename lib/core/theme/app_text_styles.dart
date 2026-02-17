@@ -1,29 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
   AppTextStyles._();
 
-  static const TextStyle headingLarge = TextStyle(
+  // ==========================
+  // Headings
+  // ==========================
+
+  static final TextStyle headingLarge = GoogleFonts.inter(
     fontSize: 24,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle headingMedium = TextStyle(
+  static final TextStyle headingMedium = GoogleFonts.inter(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle body = TextStyle(
+  // NEW: Small heading
+  static final TextStyle headingSmall = GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  // ==========================
+  // Body
+  // ==========================
+
+  static final TextStyle body = GoogleFonts.inter(
     fontSize: 14,
+    fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
   );
 
-  static const TextStyle amount = TextStyle(
+  static final TextStyle bodySmall = GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textMuted,
+  );
+
+  // ==========================
+  // Amount
+  // ==========================
+
+  static final TextStyle amount = GoogleFonts.inter(
     fontSize: 22,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
 }

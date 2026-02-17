@@ -11,6 +11,9 @@ import '../../features/analysis/presentation/screens/analysis_screen.dart';
 import '../../features/goals/presentation/screens/goals_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 
+import '../../features/auth/presentation/screens/onboarding_screen.dart';
+import '../providers/shared_prefs_provider.dart';
+
 import 'auth_notifier.dart';
 import 'app_routes.dart';
 import 'main_layout.dart';
@@ -19,28 +22,50 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = AuthNotifier();
 
   return GoRouter(
-    initialLocation: AppRoutes.login,
+    initialLocation: AppRoutes.onboarding,
     refreshListenable: authNotifier,
     redirect: (context, state) {
       final session = Supabase.instance.client.auth.currentSession;
-
       final isLoggedIn = session != null;
 
-      final isGoingToAuth =
-          state.uri.path == AppRoutes.login ||
-          state.uri.path == AppRoutes.register;
+      final prefs = ref.read(sharedPreferencesProvider);
+      final isFirstLaunch = prefs.getBool('first_launch') ?? true;
 
-      if (!isLoggedIn && !isGoingToAuth) {
-        return AppRoutes.login;
+      final goingToOnboarding = state.uri.path == AppRoutes.onboarding;
+      final goingToLogin = state.uri.path == AppRoutes.login;
+      final goingToRegister = state.uri.path == AppRoutes.register;
+
+      // 1️⃣ FIRST LAUNCH → show onboarding only once
+      if (isFirstLaunch) {
+        if (!goingToOnboarding) {
+          return AppRoutes.onboarding;
+        }
+        return null;
       }
 
-      if (isLoggedIn && isGoingToAuth) {
+      // 2️⃣ Not logged in → go to login
+      if (!isLoggedIn) {
+        if (!goingToLogin && !goingToRegister) {
+          return AppRoutes.login;
+        }
+        return null;
+      }
+
+      // 3️⃣ Logged in → prevent going back to auth/onboarding
+      if (isLoggedIn &&
+          (goingToLogin || goingToRegister || goingToOnboarding)) {
         return AppRoutes.home;
       }
 
       return null;
     },
     routes: [
+      /// ONBOARDING
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+
       /// AUTH ROUTES
       GoRoute(
         path: AppRoutes.login,
