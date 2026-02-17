@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:finwise/core/theme/app_spacing.dart';
+import 'package:finwise/core/theme/app_text_styles.dart';
+import 'package:finwise/core/theme/app_colors.dart';
+import 'package:finwise/features/home/domain/models/portfolio_summary.dart';
 
 class PortfolioCard extends StatelessWidget {
-  const PortfolioCard({super.key});
+  final PortfolioSummary summary;
+  final String currencySymbol;
+
+  const PortfolioCard({
+    super.key,
+    required this.summary,
+    this.currencySymbol = '₹',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,18 +23,14 @@ class PortfolioCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF2FBF71), Color(0xFF1F9D63)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// Header Row
-           const Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _PortfolioTitle(),
@@ -41,15 +46,17 @@ class PortfolioCard extends StatelessWidget {
 
             const SizedBox(height: AppSpacing.md),
 
-            /// Portfolio Value
+            /// Portfolio Value (Dynamic)
             Text(
-              '\$24,580',
-              style: AppTextStyles.headingLarge.copyWith(color: Colors.white),
+              '$currencySymbol${summary.totalValue.toStringAsFixed(0)}',
+              style: AppTextStyles.headingLarge.copyWith(
+                color: Colors.white,
+              ),
             ),
 
             const SizedBox(height: AppSpacing.lg),
 
-            /// Chart
+            /// Chart (Dynamic)
             SizedBox(
               height: 170,
               child: LineChart(
@@ -69,14 +76,7 @@ class PortfolioCard extends StatelessWidget {
                         show: true,
                         color: const Color(0x1FFFFFFF),
                       ),
-                      spots: const [
-                        FlSpot(0, 3),
-                        FlSpot(1, 2),
-                        FlSpot(2, 5),
-                        FlSpot(3, 3.5),
-                        FlSpot(4, 6),
-                        FlSpot(5, 4),
-                      ],
+                      spots: summary.chartSpots,
                     ),
                   ],
                 ),
@@ -96,7 +96,9 @@ class _PortfolioTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'Portfolio',
-      style: AppTextStyles.headingMedium.copyWith(color: Colors.white),
+      style: AppTextStyles.headingMedium.copyWith(
+        color: Colors.white,
+      ),
     );
   }
 }
@@ -105,21 +107,28 @@ class _ToggleChip extends StatelessWidget {
   final String label;
   final bool selected;
 
-  const _ToggleChip({required this.label, required this.selected});
+  const _ToggleChip({
+    required this.label,
+    required this.selected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: selected ? const Color(0x33FFFFFF) : Colors.transparent,
+        color: selected
+            ? Colors.white.withValues(alpha: 0.2)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
         style: AppTextStyles.body.copyWith(
           color: Colors.white,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          fontWeight: selected
+              ? FontWeight.w600
+              : FontWeight.w400,
         ),
       ),
     );
