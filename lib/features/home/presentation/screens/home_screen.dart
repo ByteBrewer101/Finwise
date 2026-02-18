@@ -7,13 +7,11 @@ import '../../../../core/theme/app_spacing.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/wallet_provider.dart';
 
-import '../../domain/models/category.dart';
 import '../../domain/models/portfolio_summary.dart';
 
 import '../widgets/home_header.dart';
 import '../widgets/balance_section.dart';
 import '../widgets/portfolio_card.dart';
-import '../widgets/categories_section.dart';
 import '../widgets/transaction_section.dart';
 import 'add_transaction_screen.dart';
 
@@ -30,13 +28,6 @@ class HomeScreen extends ConsumerWidget {
         user?.userMetadata?['full_name'] ??
         user?.email?.split('@').first ??
         'User';
-
-    const categories = [
-      Category(label: 'Investments', icon: Icons.trending_up, isPrimary: true),
-      Category(label: 'Markets', icon: Icons.show_chart),
-      Category(label: 'Savings', icon: Icons.savings),
-      Category(label: 'Goals', icon: Icons.flag),
-    ];
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -79,9 +70,6 @@ class HomeScreen extends ConsumerWidget {
 
                       const SizedBox(height: AppSpacing.lg),
                       PortfolioCard(summary: portfolioSummary),
-
-                      const SizedBox(height: AppSpacing.lg),
-                      const CategoriesSection(categories: categories),
 
                       const SizedBox(height: AppSpacing.lg),
 

@@ -7,27 +7,34 @@ class BudgetRemoteDataSource {
   BudgetRemoteDataSource(this._client);
 
   Future<List<Budget>> fetchBudgets() async {
-    final user = _client.auth.currentUser;
-    if (user == null) throw Exception('User not authenticated');
-
     final response = await _client
         .from('budgets')
-        .select()
-        .eq('user_id', user.id)
+        .select('''
+          id,
+          name,
+          amount,
+          recurrence,
+          start_date,
+          end_date,
+          category_id,
+          wallet_id
+        ''')
         .order('created_at', ascending: false);
 
     return (response as List)
-        .map((json) => Budget.fromJson(json))
+        .map((e) => Budget.fromJson(e))
         .toList();
   }
 
   Future<void> createBudget(Budget budget) async {
     final user = _client.auth.currentUser;
-    if (user == null) throw Exception('User not authenticated');
 
-    await _client.from('budgets').insert({
-      ...budget.toJson(),
-      'user_id': user.id,
-    });
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    await _client.from('budgets').insert(
+      budget.toJson(user.id),
+    );
   }
 }

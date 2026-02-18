@@ -1,151 +1,231 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
-import '../../domain/models/goal.dart';
 
-class GoalPreviewScreen extends StatelessWidget {
-  final Goal goal;
+import '../providers/goals_provider.dart';
+import '../providers/goal_contributions_provider.dart';
+import 'edit_goal_screen.dart';
+import 'add_contribution_bottom_sheet.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
-  const GoalPreviewScreen({
-    super.key,
-    required this.goal,
-  });
+class GoalPreviewScreen extends ConsumerWidget {
+  final String goalId;
+
+  const GoalPreviewScreen({super.key, required this.goalId});
 
   @override
-  Widget build(BuildContext context) {
-    final percent = (goal.progress * 100).clamp(0, 100);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goalAsync = ref.watch(singleGoalProvider(goalId));
+    final contributionsAsync = ref.watch(goalContributionsProvider(goalId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: goalAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text(e.toString())),
+          data: (goal) {
+            final percent = (goal.progress * 100)
+                .clamp(0, 100)
+                .toStringAsFixed(0);
 
-              /// HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
+                  /// HEADER
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditGoalScreen(goal: goal),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () {},
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  /// CENTER
+                  Center(
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.flag,
+                          size: 48,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(goal.name, style: AppTextStyles.headingLarge),
+                        const SizedBox(height: 8),
+                        Text(
+                          CurrencyFormatter.format(
+                            amount: goal.currentAmount,
+                            currency: goal.currency,
+                          ),
+                          style: AppTextStyles.amount.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
 
-              const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
 
-              /// GOAL TITLE
-              Center(
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.flag,
-                      size: 48,
+                  /// PROGRESS
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: goal.progress,
+                      minHeight: 8,
+                      backgroundColor: AppColors.surfaceMuted,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      goal.name,
-                      style: AppTextStyles.headingLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Rp ${goal.currentAmount.toStringAsFixed(0)}",
-                      style: AppTextStyles.amount.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              /// PROGRESS BAR
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: goal.progress,
-                  backgroundColor: AppColors.surfaceMuted,
-                  color: AppColors.primary,
-                  minHeight: 8,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  "${percent.toStringAsFixed(0)}%",
-                  style: AppTextStyles.headingSmall,
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              /// ACTION BUTTONS
-              Row(
-                children: [
-                  Expanded(
-                    child: PrimaryButton(
-                      label: "Add more",
-                      onPressed: () {},
-                    ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: SecondaryButton(
-                      label: "Contact Us",
-                      onPressed: () {},
-                    ),
+
+                  const SizedBox(height: 6),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text("$percent%", style: AppTextStyles.headingSmall),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  /// ACTION BUTTONS
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) =>
+                                  AddContributionBottomSheet(goal: goal),
+                            );
+                          },
+                          child: const Text("Add more"),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {},
+                          child: const Text("Contact Us"),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  /// CONTRIBUTIONS
+                  Text("Contributions", style: AppTextStyles.headingMedium),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  contributionsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text(e.toString())),
+                    data: (contributions) {
+                      if (contributions.isEmpty) {
+                        return const Text("No contributions yet");
+                      }
+
+                      return Column(
+                        children: contributions.map((c) {
+                          return Container(
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "+ ₹${c.amount.toStringAsFixed(0)}",
+                                  style: AppTextStyles.headingSmall,
+                                ),
+                                Text(
+                                  "${c.contributedAt.year}-${c.contributedAt.month.toString().padLeft(2, '0')}-${c.contributedAt.day.toString().padLeft(2, '0')}",
+
+                                  style: AppTextStyles.bodyMuted,
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  /// DETAILS
+                  Text("Details", style: AppTextStyles.headingMedium),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  _DetailRow(
+                    title: "Target Amount",
+                    value: "₹ ${goal.targetAmount.toStringAsFixed(0)}",
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _DetailRow(
+                    title: "Start Date",
+                    value: goal.startDate?.toString().split(" ").first ?? "-",
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  _DetailRow(
+                    title: "End Date",
+                    value: goal.endDate?.toString().split(" ").first ?? "-",
                   ),
                 ],
               ),
-
-              const SizedBox(height: AppSpacing.xl),
-
-              /// SUMMARY SECTION
-              Text(
-                "Details",
-                style: AppTextStyles.headingMedium,
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              _DetailRow(
-                title: "Target Amount",
-                value:
-                    "Rp ${goal.targetAmount.toStringAsFixed(0)}",
-              ),
-
-              const SizedBox(height: 8),
-
-              _DetailRow(
-                title: "Start Date",
-                value: goal.startDate?.toString().split(" ").first ??
-                    "-",
-              ),
-
-              const SizedBox(height: 8),
-
-              _DetailRow(
-                title: "End Date",
-                value: goal.endDate?.toString().split(" ").first ??
-                    "-",
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -156,25 +236,15 @@ class _DetailRow extends StatelessWidget {
   final String title;
   final String value;
 
-  const _DetailRow({
-    required this.title,
-    required this.value,
-  });
+  const _DetailRow({required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: AppTextStyles.body,
-        ),
-        Text(
-          value,
-          style: AppTextStyles.headingSmall,
-        ),
+        Text(title, style: AppTextStyles.body),
+        Text(value, style: AppTextStyles.headingSmall),
       ],
     );
   }

@@ -53,4 +53,13 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
+  // ==========================
+  // Muted
+  // ==========================
+
+  static final TextStyle bodyMuted = GoogleFonts.inter(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textMuted,
+  );
 }

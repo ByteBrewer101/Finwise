@@ -1,13 +1,25 @@
-import 'package:flutter/material.dart';
-
 class Category {
-  final String label;
-  final IconData icon;
-  final bool isPrimary;
+  final String id;
+  final String name;
+  final String type;
+  final String? icon;
+  final bool isDefault;
 
-  const Category({
-    required this.label,
-    required this.icon,
-    this.isPrimary = false,
+  Category({
+    required this.id,
+    required this.name,
+    required this.type,
+    this.icon,
+    required this.isDefault,
   });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      name: json['name'],
+      type: json['type'],
+      icon: json['icon'],
+      isDefault: json['is_default'] ?? false,
+    );
+  }
 }

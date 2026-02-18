@@ -38,7 +38,7 @@ class BudgetScreen extends ConsumerWidget {
               ),
               ...budgets.map(
                 (budget) => BudgetCategory(
-                  title: budget.category,
+                  title: budget.name,
                   percentage:
                       25, // placeholder until spending logic added
                 ),

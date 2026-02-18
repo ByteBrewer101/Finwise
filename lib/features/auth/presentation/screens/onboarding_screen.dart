@@ -122,7 +122,8 @@ class _OnboardingScreenState
                     errorBuilder: (_, __, ___) => Icon(
                       Icons.cloud,
                       size: 180,
-                      color: Colors.white.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.1),
+
                     ),
                   ),
                 ),

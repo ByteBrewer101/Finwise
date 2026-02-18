@@ -2,19 +2,23 @@ class Budget {
   final String id;
   final String name;
   final double amount;
-  final String category;
-  final String wallet;
+  final String categoryId;
+  final String walletId;
   final String recurrence;
   final DateTime startDate;
+  final DateTime? endDate;
+  final String currency; // ✅ NEW
 
   Budget({
     required this.id,
     required this.name,
     required this.amount,
-    required this.category,
-    required this.wallet,
+    required this.categoryId,
+    required this.walletId,
     required this.recurrence,
     required this.startDate,
+    this.endDate,
+    required this.currency, // ✅ NEW
   });
 
   factory Budget.fromJson(Map<String, dynamic> json) {
@@ -22,21 +26,28 @@ class Budget {
       id: json['id'],
       name: json['name'],
       amount: (json['amount'] as num).toDouble(),
-      category: json['category'],
-      wallet: json['wallet'],
+      categoryId: json['category_id'],
+      walletId: json['wallet_id'],
       recurrence: json['recurrence'],
       startDate: DateTime.parse(json['start_date']),
+      endDate: json['end_date'] != null
+          ? DateTime.parse(json['end_date'])
+          : null,
+      currency: json['currency'] ?? 'INR', // ✅ SAFE DEFAULT
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson(String userId) {
     return {
+      'user_id': userId,
       'name': name,
       'amount': amount,
-      'category': category,
-      'wallet': wallet,
+      'category_id': categoryId,
+      'wallet_id': walletId,
       'recurrence': recurrence,
       'start_date': startDate.toIso8601String(),
+      'end_date': endDate?.toIso8601String(),
+      'currency': currency, // ✅ NEW
     };
   }
 }

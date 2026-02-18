@@ -3,6 +3,7 @@ import '../../domain/models/goal.dart';
 import '../../domain/repository/goal_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../services/data/supabase_client_provider.dart';
+import '../../domain/models/goal_contribution.dart';
 
 final goalRepositoryProvider = Provider<GoalRepository>((ref) {
   final supabase = ref.read(supabaseClientProvider);
@@ -21,9 +22,7 @@ class GoalRepositoryImpl implements GoalRepository {
         .select()
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((e) => Goal.fromMap(e))
-        .toList();
+    return (response as List).map((e) => Goal.fromMap(e)).toList();
   }
 
   @override
@@ -52,5 +51,76 @@ class GoalRepositoryImpl implements GoalRepository {
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
     });
+  }
+
+  @override
+  Future<void> addContribution({
+    required String goalId,
+    required String walletId,
+    required double amount,
+  }) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception("User not authenticated");
+    }
+
+    // 1️⃣ Insert transaction (expense)
+    final transaction = await supabase
+        .from('transactions')
+        .insert({
+          'user_id': user.id,
+          'wallet_id': walletId,
+          'type': 'expense',
+          'amount': amount,
+          'description': 'Goal Contribution',
+          'transaction_date': DateTime.now().toIso8601String(),
+        })
+        .select()
+        .single();
+
+    final transactionId = transaction['id'];
+
+    // 2️⃣ Insert goal contribution linked to transaction
+    await supabase.from('goal_contributions').insert({
+      'goal_id': goalId,
+      'user_id': user.id,
+      'amount': amount,
+      'contributed_at': DateTime.now().toIso8601String(),
+      'transaction_id': transactionId,
+    });
+  }
+
+  @override
+  Future<List<GoalContribution>> fetchContributions(String goalId) async {
+    final response = await supabase
+        .from('goal_contributions')
+        .select()
+        .eq('goal_id', goalId)
+        .order('contributed_at', ascending: false);
+
+    return (response as List).map((e) => GoalContribution.fromMap(e)).toList();
+  }
+
+  @override
+  Future<void> updateGoal({
+    required String goalId,
+    required String name,
+    required String targetFor,
+    required double targetAmount,
+    required String currency,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    await supabase
+        .from('goals')
+        .update({
+          'name': name,
+          'target_for': targetFor,
+          'target_amount': targetAmount,
+          'currency': currency,
+          'start_date': startDate?.toIso8601String(),
+          'end_date': endDate?.toIso8601String(),
+        })
+        .eq('id', goalId);
   }
 }

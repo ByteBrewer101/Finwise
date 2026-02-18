@@ -48,7 +48,7 @@ class BudgetSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// Title
-           Text('Total Balance', style: AppTextStyles.body),
+          Text('Total Balance', style: AppTextStyles.body),
 
           const SizedBox(height: AppSpacing.sm),
 
@@ -57,7 +57,7 @@ class BudgetSummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '₹ ${_formatCurrency(summary.totalBalance)}',
+                '$currencySymbol ${_formatCurrency(summary.totalBalance)}',
                 style: AppTextStyles.headingLarge,
               ),
 

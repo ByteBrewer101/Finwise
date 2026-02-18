@@ -58,60 +58,58 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
   // ============================
 
   Future<bool> _showConfirmation() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Confirmation", style: AppTextStyles.headingMedium),
-
-                const SizedBox(height: AppSpacing.md),
-
-                Text(
-                  "Are you sure you want to make these goals?",
-                  style: AppTextStyles.body,
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                Row(
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text(
-                          "No",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
+                    Text("Confirmation", style: AppTextStyles.headingMedium),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      "Are you sure you want to make these goals?",
+                      style: AppTextStyles.body,
+                      textAlign: TextAlign.center,
                     ),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text(
-                          "Yes",
-                          style: TextStyle(color: AppColors.primary),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
+                            child: const Text(
+                              "No",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ),
-                      ),
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
+                            child: const Text(
+                              "Yes",
+                              style: TextStyle(color: AppColors.primary),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    return result ?? false;
+              ),
+            );
+          },
+        ) ??
+        false;
   }
 
   // ============================
@@ -120,70 +118,26 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // 1️⃣ Show confirmation
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Confirmation", style: AppTextStyles.headingMedium),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  "Are you sure you want to make these goals?",
-                  style: AppTextStyles.body,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                        child: const Text(
-                          "No",
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, true),
-                        child: const Text(
-                          "Yes",
-                          style: TextStyle(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    if (_targetFor == null || _currency == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please complete all fields")),
+      );
+      return;
+    }
 
-    if (confirm != true) return;
+    final confirm = await _showConfirmation();
+    if (!confirm) return;
 
     setState(() => _loading = true);
 
     try {
-      // 2️⃣ Create goal
       await ref
           .read(goalsNotifierProvider.notifier)
           .createGoal(
             name: _nameController.text.trim(),
             targetFor: _targetFor!,
-            contribution: double.parse(_contributionController.text.trim()),
             targetAmount: double.parse(_targetFundController.text.trim()),
+            contribution: double.parse(_contributionController.text.trim()),
             currency: _currency!,
             startDate: _startDate,
             endDate: _endDate,
@@ -191,50 +145,20 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
 
       if (!mounted) return;
 
-      // 3️⃣ Close bottom sheet FIRST
-      Navigator.of(context).pop();
+      Navigator.pop(context); // close sheet first
 
-      // 4️⃣ Show success dialog on root navigator
-      await showDialog(
-        context: Navigator.of(context, rootNavigator: true).context,
-        barrierDismissible: false,
-        builder: (successContext) {
-          return Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    size: 60,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    "Success Goals Created",
-                    style: AppTextStyles.headingMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  TextButton(
-                    onPressed: () => Navigator.of(successContext).pop(),
-                    child: const Text(
-                      "Back to Goals",
-                      style: TextStyle(color: AppColors.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Goal created successfully")),
       );
-    } catch (_) {}
+    } catch (e) {
+      if (!mounted) return;
 
-    if (mounted) setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   // ============================

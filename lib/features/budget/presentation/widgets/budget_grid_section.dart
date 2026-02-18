@@ -63,12 +63,15 @@ class _PrimaryBudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  Column(
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.add, color: Colors.white, size: 32),
         SizedBox(height: AppSpacing.sm),
-        Text('Set Budget', style: AppTextStyles.body),
+        Text(
+          'Set Budget',
+          style: AppTextStyles.body.copyWith(color: Colors.white),
+        ),
       ],
     );
   }

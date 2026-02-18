@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_card_container.dart';
 
 import '../providers/goals_provider.dart';
@@ -48,38 +49,6 @@ class GoalsScreen extends ConsumerWidget {
                             backgroundColor: Colors.transparent,
                             builder: (_) => const SetGoalBottomSheet(),
                           );
-
-                          if (!context.mounted) return;
-
-                          // Show success AFTER bottom sheet closes
-                          showDialog(
-                            context: context,
-                            builder: (_) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child:const Padding(
-                                  padding:  EdgeInsets.all(24),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children:  [
-                                      Icon(
-                                        Icons.check_circle,
-                                        size: 60,
-                                        color: AppColors.primary,
-                                      ),
-                                      SizedBox(height: 16),
-                                      Text(
-                                        "Success Goals Created",
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
                         },
                       ),
                     ],
@@ -97,7 +66,12 @@ class GoalsScreen extends ConsumerWidget {
                       Text("Total Goals Value", style: AppTextStyles.body),
                       const SizedBox(height: 6),
                       Text(
-                        "Rp ${totalValue.toStringAsFixed(0)}",
+                        CurrencyFormatter.format(
+                          amount: totalValue,
+                          currency: goals.isNotEmpty
+                              ? goals.first.currency
+                              : null,
+                        ),
                         style: AppTextStyles.amount,
                       ),
                     ],
@@ -145,7 +119,7 @@ class _GoalCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => GoalPreviewScreen(goal: goal)),
+          MaterialPageRoute(builder: (_) => GoalPreviewScreen(goalId: goal.id)),
         );
       },
       child: AppCardContainer(
@@ -159,7 +133,10 @@ class _GoalCard extends StatelessWidget {
 
             /// CURRENT AMOUNT
             Text(
-              "Rp ${goal.currentAmount.toStringAsFixed(0)}",
+              CurrencyFormatter.format(
+                amount: goal.currentAmount,
+                currency: goal.currency,
+              ),
               style: AppTextStyles.body.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w600,
@@ -183,7 +160,8 @@ class _GoalCard extends StatelessWidget {
 
             /// PERCENT TEXT
             Text(
-              "${percent.toStringAsFixed(0)}% • out of Rp ${goal.targetAmount.toStringAsFixed(0)}",
+              "${percent.toStringAsFixed(0)}% • out of "
+              "${CurrencyFormatter.format(amount: goal.targetAmount, currency: goal.currency)}",
               style: AppTextStyles.bodySmall,
             ),
           ],
