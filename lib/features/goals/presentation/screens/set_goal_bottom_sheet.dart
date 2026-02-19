@@ -19,16 +19,29 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
+  final _targetForController = TextEditingController();
   final _contributionController = TextEditingController();
   final _targetFundController = TextEditingController();
 
-  String? _targetFor;
   String? _currency;
 
   DateTime? _startDate;
   DateTime? _endDate;
 
   bool _loading = false;
+
+  // ============================
+  // CLEANUP (Production Safe)
+  // ============================
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _targetForController.dispose();
+    _contributionController.dispose();
+    _targetFundController.dispose();
+    super.dispose();
+  }
 
   // ============================
   // DATE PICKER
@@ -115,12 +128,20 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
   // ============================
   // SUBMIT
   // ============================
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_targetFor == null || _currency == null) {
+    if (_currency == null || _startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please complete all fields")),
+      );
+      return;
+    }
+
+    if (_endDate!.isBefore(_startDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("End date must be after start date")),
       );
       return;
     }
@@ -135,7 +156,7 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
           .read(goalsNotifierProvider.notifier)
           .createGoal(
             name: _nameController.text.trim(),
-            targetFor: _targetFor!,
+            targetFor: _targetForController.text.trim(),
             targetAmount: double.parse(_targetFundController.text.trim()),
             contribution: double.parse(_contributionController.text.trim()),
             currency: _currency!,
@@ -145,7 +166,7 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
 
       if (!mounted) return;
 
-      Navigator.pop(context); // close sheet first
+      Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Goal created successfully")),
@@ -196,21 +217,11 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  DropdownButtonFormField<String>(
-                    initialValue: _targetFor,
-                    decoration: const InputDecoration(labelText: "Target For"),
-                    items: const [
-                      DropdownMenuItem(
-                        value: "Married",
-                        child: Text("Married"),
-                      ),
-                      DropdownMenuItem(value: "House", child: Text("House")),
-                      DropdownMenuItem(
-                        value: "Vacation",
-                        child: Text("Vacation"),
-                      ),
-                    ],
-                    onChanged: (val) => setState(() => _targetFor = val),
+                  AppInputField(
+                    controller: _targetForController,
+                    label: "Target For",
+                    validator: (v) =>
+                        v == null || v.isEmpty ? "Enter target purpose" : null,
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -219,6 +230,16 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
                     controller: _contributionController,
                     label: "Contribution",
                     keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) {
+                        return "Enter contribution";
+                      }
+                      final value = double.tryParse(v);
+                      if (value == null || value <= 0) {
+                        return "Enter valid amount";
+                      }
+                      return null;
+                    },
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -227,13 +248,32 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
                     controller: _targetFundController,
                     label: "Target Fund",
                     keyboardType: TextInputType.number,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) {
+                        return "Enter target amount";
+                      }
+                      final value = double.tryParse(v);
+                      if (value == null || value <= 0) {
+                        return "Enter valid amount";
+                      }
+                      return null;
+                    },
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
 
                   DropdownButtonFormField<String>(
                     initialValue: _currency,
-                    decoration: const InputDecoration(labelText: "Currency"),
+                    decoration: InputDecoration(
+                      labelText: "Currency",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
                     items: const [
                       DropdownMenuItem(value: "INR", child: Text("INR")),
                       DropdownMenuItem(value: "IDR", child: Text("IDR")),

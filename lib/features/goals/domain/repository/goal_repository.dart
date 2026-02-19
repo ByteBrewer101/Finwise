@@ -19,6 +19,7 @@ abstract class GoalRepository {
     required String walletId,
     required double amount,
   });
+
   Future<void> updateGoal({
     required String goalId,
     required String name,
@@ -28,6 +29,9 @@ abstract class GoalRepository {
     DateTime? startDate,
     DateTime? endDate,
   });
+
+  // ✅ ADDED (Only this)
+  Future<void> deleteGoal(String goalId);
 
   Future<List<GoalContribution>> fetchContributions(String goalId);
 }

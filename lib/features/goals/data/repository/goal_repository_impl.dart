@@ -64,7 +64,6 @@ class GoalRepositoryImpl implements GoalRepository {
       throw Exception("User not authenticated");
     }
 
-    // 1️⃣ Insert transaction (expense)
     final transaction = await supabase
         .from('transactions')
         .insert({
@@ -80,7 +79,6 @@ class GoalRepositoryImpl implements GoalRepository {
 
     final transactionId = transaction['id'];
 
-    // 2️⃣ Insert goal contribution linked to transaction
     await supabase.from('goal_contributions').insert({
       'goal_id': goalId,
       'user_id': user.id,
@@ -98,7 +96,9 @@ class GoalRepositoryImpl implements GoalRepository {
         .eq('goal_id', goalId)
         .order('contributed_at', ascending: false);
 
-    return (response as List).map((e) => GoalContribution.fromMap(e)).toList();
+    return (response as List)
+        .map((e) => GoalContribution.fromMap(e))
+        .toList();
   }
 
   @override
@@ -122,5 +122,24 @@ class GoalRepositoryImpl implements GoalRepository {
           'end_date': endDate?.toIso8601String(),
         })
         .eq('id', goalId);
+  }
+
+  // =====================================================
+  // DELETE GOAL (Only Added This)
+  // =====================================================
+
+  @override
+  Future<void> deleteGoal(String goalId) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception("User not authenticated");
+    }
+
+    await supabase
+        .from('goals')
+        .delete()
+        .eq('id', goalId)
+        .eq('user_id', user.id);
   }
 }

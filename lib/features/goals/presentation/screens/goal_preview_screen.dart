@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 import '../providers/goals_provider.dart';
 import '../providers/goal_contributions_provider.dart';
 import 'edit_goal_screen.dart';
 import 'add_contribution_bottom_sheet.dart';
-import '../../../../core/utils/currency_formatter.dart';
 
 class GoalPreviewScreen extends ConsumerWidget {
   final String goalId;
@@ -28,6 +28,11 @@ class GoalPreviewScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text(e.toString())),
           data: (goal) {
+            // 🔥 SAFETY: Goal may be null after delete
+            if (goal == null) {
+              return const Center(child: Text("Goal not found"));
+            }
+
             final percent = (goal.progress * 100)
                 .clamp(0, 100)
                 .toStringAsFixed(0);
@@ -88,7 +93,7 @@ class GoalPreviewScreen extends ConsumerWidget {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  /// PROGRESS
+                  /// PROGRESS BAR
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
@@ -171,7 +176,6 @@ class GoalPreviewScreen extends ConsumerWidget {
                                   color: AppColors.primary.withValues(
                                     alpha: 0.1,
                                   ),
-
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -186,7 +190,6 @@ class GoalPreviewScreen extends ConsumerWidget {
                                 ),
                                 Text(
                                   "${c.contributedAt.year}-${c.contributedAt.month.toString().padLeft(2, '0')}-${c.contributedAt.day.toString().padLeft(2, '0')}",
-
                                   style: AppTextStyles.bodyMuted,
                                 ),
                               ],
