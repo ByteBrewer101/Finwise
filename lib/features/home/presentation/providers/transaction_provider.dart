@@ -1,3 +1,5 @@
+import 'package:finwise/features/budget/presentation/providers/budget_provider.dart';
+import 'package:finwise/features/budget/presentation/providers/budget_transactions_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -61,6 +63,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 
       // 🔥 CRITICAL: Reload wallets after trigger updates balance
       await ref.read(walletProvider.notifier).loadWallets();
+      ref.invalidate(budgetListProvider);
+      ref.invalidate(budgetTransactionsProvider);
     } catch (e, st) {
       state = AsyncError(e, st);
     }

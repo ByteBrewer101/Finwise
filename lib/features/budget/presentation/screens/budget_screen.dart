@@ -1,3 +1,4 @@
+import 'package:finwise/features/budget/presentation/screens/budget_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,7 +6,6 @@ import 'package:finwise/core/theme/app_spacing.dart';
 
 import '../../domain/models/budget.dart';
 import '../../domain/models/budget_summary.dart';
-import '../../domain/models/budget_category.dart';
 
 import '../providers/budget_provider.dart';
 
@@ -27,20 +27,6 @@ class BudgetScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Error: $e')),
           data: (budgets) {
-            final categories = [
-              const BudgetCategory(
-                title: 'Set Budget',
-                percentage: 0,
-                isPrimary: true,
-              ),
-              ...budgets.map(
-                (budget) => BudgetCategory(
-                  title: budget.categoryName ?? budget.name,
-                  percentage: budget.progress * 100,
-                ),
-              ),
-            ];
-
             return SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
@@ -67,16 +53,22 @@ class BudgetScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.lg),
 
                   BudgetGridSection(
-                    categories: categories,
-                    onCategoryTap: (category) {
-                      if (category.isPrimary) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SetBudgetScreen(),
-                          ),
-                        );
-                      }
+                    budgets: budgets,
+                    onPrimaryTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SetBudgetScreen(),
+                        ),
+                      );
+                    },
+                    onBudgetTap: (budget) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BudgetDetailScreen(budget: budget),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -88,7 +80,7 @@ class BudgetScreen extends ConsumerWidget {
     );
   }
 
-  /// Build summary dynamically (typed properly)
+  /// Build summary dynamically
   static BudgetSummary _buildSummaryFromBudgets(List<Budget> budgets) {
     double total = 0;
     double cash = 0;

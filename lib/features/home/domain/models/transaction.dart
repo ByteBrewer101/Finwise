@@ -7,11 +7,11 @@ class Transaction {
   final String? walletId;
   final String? targetWalletId;
   final String? categoryId;
+  final String? budgetId; 
 
   final TransactionType type;
   final double amount;
   final String? description;
-
   final DateTime transactionDate;
   final DateTime createdAt;
 
@@ -26,6 +26,7 @@ class Transaction {
     this.targetWalletId,
     this.categoryId,
     this.description,
+    this.budgetId, 
   });
 
   // ==============================
@@ -39,6 +40,7 @@ class Transaction {
       walletId: map['wallet_id'],
       targetWalletId: map['target_wallet_id'],
       categoryId: map['category_id'],
+      budgetId: map['budget_id'], 
       type: TransactionType.values.firstWhere(
         (e) => e.name == map['type'],
       ),
@@ -58,6 +60,7 @@ class Transaction {
       'wallet_id': walletId,
       'target_wallet_id': targetWalletId,
       'category_id': categoryId,
+      'budget_id': budgetId, 
       'type': type.name,
       'amount': amount,
       'description': description,

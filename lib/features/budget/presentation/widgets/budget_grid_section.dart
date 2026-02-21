@@ -4,16 +4,18 @@ import 'package:finwise/core/theme/app_text_styles.dart';
 import 'package:finwise/core/theme/app_colors.dart';
 import 'package:finwise/core/theme/app_radius.dart';
 
-import '../../domain/models/budget_category.dart';
+import '../../domain/models/budget.dart';
 
 class BudgetGridSection extends StatelessWidget {
-  final List<BudgetCategory> categories;
-  final Function(BudgetCategory)? onCategoryTap;
+  final List<Budget> budgets;
+  final VoidCallback? onPrimaryTap;
+  final Function(Budget)? onBudgetTap;
 
   const BudgetGridSection({
     super.key,
-    required this.categories,
-    this.onCategoryTap,
+    required this.budgets,
+    this.onPrimaryTap,
+    this.onBudgetTap,
   });
 
   @override
@@ -21,7 +23,7 @@ class BudgetGridSection extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: categories.length,
+      itemCount: budgets.length + 1, // +1 for Set Budget
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
@@ -29,28 +31,39 @@ class BudgetGridSection extends StatelessWidget {
         childAspectRatio: 1,
       ),
       itemBuilder: (context, index) {
-        final category = categories[index];
+        // Primary card
+        if (index == 0) {
+          return GestureDetector(
+            onTap: onPrimaryTap,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              child: const _PrimaryBudgetCard(),
+            ),
+          );
+        }
+
+        final budget = budgets[index - 1];
 
         return GestureDetector(
-          onTap: () => onCategoryTap?.call(category),
+          onTap: () => onBudgetTap?.call(budget),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: category.isPrimary ? Colors.black : AppColors.card,
+              color: AppColors.card,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: category.isPrimary
-                  ? null
-                  : const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-            child: category.isPrimary
-                ? const _PrimaryBudgetCard()
-                : _BudgetProgressCard(category: category),
+            child: _BudgetProgressCard(budget: budget),
           ),
         );
       },
@@ -65,26 +78,23 @@ class _PrimaryBudgetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+      children: const [
         Icon(Icons.add, color: Colors.white, size: 32),
         SizedBox(height: AppSpacing.sm),
-        Text(
-          'Set Budget',
-          style: AppTextStyles.body.copyWith(color: Colors.white),
-        ),
+        Text('Set Budget', style: TextStyle(color: Colors.white)),
       ],
     );
   }
 }
 
 class _BudgetProgressCard extends StatelessWidget {
-  final BudgetCategory category;
+  final Budget budget;
 
-  const _BudgetProgressCard({required this.category});
+  const _BudgetProgressCard({required this.budget});
 
   @override
   Widget build(BuildContext context) {
-    final progress = category.percentage / 100;
+    final progress = budget.progress;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -102,7 +112,7 @@ class _BudgetProgressCard extends StatelessWidget {
                 valueColor: const AlwaysStoppedAnimation(AppColors.primary),
               ),
               Text(
-                '${category.percentage.toStringAsFixed(0)}%',
+                '${(progress * 100).toStringAsFixed(0)}%',
                 style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
@@ -110,7 +120,7 @@ class _BudgetProgressCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          category.title,
+          budget.name, // 🔥 Real budget identity
           style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
