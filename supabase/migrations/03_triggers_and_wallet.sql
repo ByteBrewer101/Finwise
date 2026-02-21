@@ -9,11 +9,11 @@ security definer
 set search_path = public
 as $$
 begin
-
   insert into public.profiles (id, full_name)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
+    coalesce(new.raw_user_meta_data->>'full_name',
+             split_part(new.email, '@', 1))
   );
 
   insert into public.wallets (user_id, name, type, balance, currency)
@@ -38,7 +38,7 @@ for each row execute procedure public.handle_new_user();
 
 
 -- =========================================================
--- WALLET BALANCE SYNC
+-- WALLET BALANCE SYNC (ONLY ONE TRIGGER ALLOWED)
 -- =========================================================
 
 create or replace function public.sync_wallet_balance()
@@ -50,7 +50,7 @@ declare
   current_balance numeric;
 begin
 
-  if (tg_op = 'INSERT') then
+  if tg_op = 'INSERT' then
 
     if new.type = 'income' then
       update public.wallets
@@ -90,18 +90,9 @@ begin
       where id = new.target_wallet_id;
     end if;
 
-  elsif (tg_op = 'DELETE') then
+  elsif tg_op = 'DELETE' then
 
     if old.type = 'income' then
-      select balance into current_balance
-      from public.wallets
-      where id = old.wallet_id
-      for update;
-
-      if current_balance - old.amount < 0 then
-        raise exception 'Cannot revert income. Balance would go negative.';
-      end if;
-
       update public.wallets
       set balance = balance - old.amount
       where id = old.wallet_id;
@@ -112,15 +103,6 @@ begin
       where id = old.wallet_id;
 
     elsif old.type = 'transfer' then
-      select balance into current_balance
-      from public.wallets
-      where id = old.target_wallet_id
-      for update;
-
-      if current_balance - old.amount < 0 then
-        raise exception 'Cannot revert transfer. Target wallet insufficient.';
-      end if;
-
       update public.wallets
       set balance = balance + old.amount
       where id = old.wallet_id;
@@ -135,8 +117,6 @@ begin
   return null;
 end;
 $$;
-
-
 
 drop trigger if exists wallet_balance_trigger on public.transactions;
 

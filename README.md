@@ -1,3 +1,6 @@
+need to fux delete goal issue where transactions are not deleted 
+need to fix create goal -- contribution so its added for the fist tie only if given
+
 Flutter Fintech App
 
 A production-ready Flutter fintech application built with scalable architecture, secure authentication (JWT + Google Login), local database caching, and Node.js backend integration.

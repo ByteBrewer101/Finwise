@@ -1,22 +1,21 @@
+import 'package:finwise/features/home/presentation/providers/wallet_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repository/goal_repository_impl.dart';
-
 import '../../domain/repository/goal_repository.dart';
 import 'goals_provider.dart';
-import 'goal_contributions_provider.dart';
+import 'goal_detail_providers.dart';
 
 final goalsNotifierProvider =
     StateNotifierProvider<GoalsNotifier, AsyncValue<void>>((ref) {
-  final repository = ref.read(goalRepositoryProvider);
-  return GoalsNotifier(repository, ref);
-});
+      final repository = ref.read(goalRepositoryProvider);
+      return GoalsNotifier(repository, ref);
+    });
 
 class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
   final GoalRepository repository;
   final Ref ref;
 
-  GoalsNotifier(this.repository, this.ref)
-      : super(const AsyncData(null));
+  GoalsNotifier(this.repository, this.ref) : super(const AsyncData(null));
 
   // =====================================================
   // CREATE
@@ -45,6 +44,7 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
       );
 
       ref.invalidate(goalsProvider);
+
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -53,7 +53,7 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   // =====================================================
-  // UPDATE (Backend Sync)
+  // UPDATE
   // =====================================================
 
   Future<void> updateGoal({
@@ -80,15 +80,13 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
 
       ref.invalidate(goalsProvider);
       ref.invalidate(singleGoalProvider(goalId));
-
+      ref.read(walletProvider.notifier).loadWallets();
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;
     }
   }
-
-
 
   // =====================================================
   // DELETE
@@ -102,7 +100,8 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
 
       ref.invalidate(goalsProvider);
       ref.invalidate(singleGoalProvider(goalId));
-
+      ref.invalidate(goalContributionsProvider(goalId));
+      await ref.read(walletProvider.notifier).loadWallets();
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -113,7 +112,6 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
   // =====================================================
   // ADD CONTRIBUTION
   // =====================================================
-
   Future<void> addContribution({
     required String goalId,
     required String walletId,
@@ -128,11 +126,13 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
         amount: amount,
       );
 
-      ref.invalidate(goalsProvider);
-      ref.invalidate(singleGoalProvider(goalId));
-      ref.invalidate(goalContributionsProvider(goalId));
-
       state = const AsyncData(null);
+
+      // Invalidate AFTER state reset
+      ref.invalidate(goalContributionsProvider(goalId));
+      ref.invalidate(singleGoalProvider(goalId));
+      ref.invalidate(goalsProvider);
+      ref.read(walletProvider.notifier).loadWallets();
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;

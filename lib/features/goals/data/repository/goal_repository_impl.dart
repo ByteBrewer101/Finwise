@@ -96,9 +96,7 @@ class GoalRepositoryImpl implements GoalRepository {
         .eq('goal_id', goalId)
         .order('contributed_at', ascending: false);
 
-    return (response as List)
-        .map((e) => GoalContribution.fromMap(e))
-        .toList();
+    return (response as List).map((e) => GoalContribution.fromMap(e)).toList();
   }
 
   @override
@@ -131,15 +129,10 @@ class GoalRepositoryImpl implements GoalRepository {
   @override
   Future<void> deleteGoal(String goalId) async {
     final user = supabase.auth.currentUser;
-
     if (user == null) {
       throw Exception("User not authenticated");
     }
 
-    await supabase
-        .from('goals')
-        .delete()
-        .eq('id', goalId)
-        .eq('user_id', user.id);
+    await supabase.rpc('delete_goal_atomic', params: {'p_goal_id': goalId});
   }
 }

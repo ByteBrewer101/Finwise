@@ -5,9 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
-
-import '../providers/goals_provider.dart';
-import '../providers/goal_contributions_provider.dart';
+import '../providers/goal_detail_providers.dart';
 import 'edit_goal_screen.dart';
 import 'add_contribution_bottom_sheet.dart';
 
@@ -24,212 +22,200 @@ class GoalPreviewScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: goalAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(e.toString())),
-          data: (goal) {
-            // 🔥 SAFETY: Goal may be null after delete
-            if (goal == null) {
-              return const Center(child: Text("Goal not found"));
-            }
-
-            final percent = (goal.progress * 100)
-                .clamp(0, 100)
-                .toStringAsFixed(0);
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// HEADER
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EditGoalScreen(goal: goal),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  /// CENTER
-                  Center(
-                    child: Column(
+        child: goalAsync == null
+            ? const Center(child: Text("Goal not found"))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// HEADER
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(
-                          Icons.flag,
-                          size: 48,
-                          color: AppColors.primary,
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        const SizedBox(height: 16),
-                        Text(goal.name, style: AppTextStyles.headingLarge),
-                        const SizedBox(height: 8),
-                        Text(
-                          CurrencyFormatter.format(
-                            amount: goal.currentAmount,
-                            currency: goal.currency,
-                          ),
-                          style: AppTextStyles.amount.copyWith(
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditGoalScreen(goal: goalAsync),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    /// CENTER
+                    Center(
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.flag,
+                            size: 48,
                             color: AppColors.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            goalAsync.name,
+                            style: AppTextStyles.headingLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            CurrencyFormatter.format(
+                              amount: goalAsync.currentAmount,
+                              currency: goalAsync.currency,
+                            ),
+                            style: AppTextStyles.amount.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    /// PROGRESS BAR
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: goalAsync.progress,
+                        minHeight: 8,
+                        backgroundColor: AppColors.surfaceMuted,
+                        color: AppColors.primary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        "${(goalAsync.progress * 100).clamp(0, 100).toStringAsFixed(0)}%",
+                        style: AppTextStyles.headingSmall,
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    /// ACTION BUTTONS
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) =>
+                                    AddContributionBottomSheet(goal: goalAsync),
+                              );
+                            },
+                            child: const Text("Add more"),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            child: const Text("Contact Us"),
                           ),
                         ),
                       ],
                     ),
-                  ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.xl),
 
-                  /// PROGRESS BAR
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: goal.progress,
-                      minHeight: 8,
-                      backgroundColor: AppColors.surfaceMuted,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                    /// CONTRIBUTIONS (keep async)
+                    Text("Contributions", style: AppTextStyles.headingMedium),
 
-                  const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.md),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text("$percent%", style: AppTextStyles.headingSmall),
-                  ),
+                    contributionsAsync.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, _) => Center(child: Text(e.toString())),
+                      data: (contributions) {
+                        if (contributions.isEmpty) {
+                          return const Text("No contributions yet");
+                        }
 
-                  const SizedBox(height: AppSpacing.xl),
-
-                  /// ACTION BUTTONS
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (_) =>
-                                  AddContributionBottomSheet(goal: goal),
-                            );
-                          },
-                          child: const Text("Add more"),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          child: const Text("Contact Us"),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  /// CONTRIBUTIONS
-                  Text("Contributions", style: AppTextStyles.headingMedium),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  contributionsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text(e.toString())),
-                    data: (contributions) {
-                      if (contributions.isEmpty) {
-                        return const Text("No contributions yet");
-                      }
-
-                      return Column(
-                        children: contributions.map((c) {
-                          return Container(
-                            margin: const EdgeInsets.only(
-                              bottom: AppSpacing.md,
-                            ),
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.1,
+                        return Column(
+                          children: contributions.map((c) {
+                            return Container(
+                              margin: const EdgeInsets.only(
+                                bottom: AppSpacing.md,
+                              ),
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "+ ₹${c.amount.toStringAsFixed(0)}",
+                                    style: AppTextStyles.headingSmall,
                                   ),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "+ ₹${c.amount.toStringAsFixed(0)}",
-                                  style: AppTextStyles.headingSmall,
-                                ),
-                                Text(
-                                  "${c.contributedAt.year}-${c.contributedAt.month.toString().padLeft(2, '0')}-${c.contributedAt.day.toString().padLeft(2, '0')}",
-                                  style: AppTextStyles.bodyMuted,
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
+                                  Text(
+                                    "${c.contributedAt.year}-${c.contributedAt.month.toString().padLeft(2, '0')}-${c.contributedAt.day.toString().padLeft(2, '0')}",
+                                    style: AppTextStyles.bodyMuted,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
 
-                  const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xl),
 
-                  /// DETAILS
-                  Text("Details", style: AppTextStyles.headingMedium),
+                    /// DETAILS
+                    Text("Details", style: AppTextStyles.headingMedium),
 
-                  const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
 
-                  _DetailRow(
-                    title: "Target Amount",
-                    value: "₹ ${goal.targetAmount.toStringAsFixed(0)}",
-                  ),
+                    _DetailRow(
+                      title: "Target Amount",
+                      value: "₹ ${goalAsync.targetAmount.toStringAsFixed(0)}",
+                    ),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  _DetailRow(
-                    title: "Start Date",
-                    value: goal.startDate?.toString().split(" ").first ?? "-",
-                  ),
+                    _DetailRow(
+                      title: "Start Date",
+                      value:
+                          goalAsync.startDate?.toString().split(" ").first ??
+                          "-",
+                    ),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  _DetailRow(
-                    title: "End Date",
-                    value: goal.endDate?.toString().split(" ").first ?? "-",
-                  ),
-                ],
+                    _DetailRow(
+                      title: "End Date",
+                      value:
+                          goalAsync.endDate?.toString().split(" ").first ?? "-",
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
-        ),
       ),
     );
   }
