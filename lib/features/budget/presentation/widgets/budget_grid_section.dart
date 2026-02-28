@@ -23,7 +23,7 @@ class BudgetGridSection extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: budgets.length + 1, // +1 for Set Budget
+      itemCount: budgets.length + 1,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
@@ -31,7 +31,6 @@ class BudgetGridSection extends StatelessWidget {
         childAspectRatio: 1,
       ),
       itemBuilder: (context, index) {
-        // Primary card
         if (index == 0) {
           return GestureDetector(
             onTap: onPrimaryTap,
@@ -120,7 +119,7 @@ class _BudgetProgressCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          budget.name, // 🔥 Real budget identity
+          budget.name,
           style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
         ),
       ],

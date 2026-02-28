@@ -14,7 +14,6 @@ class TransactionTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isIncome = transaction.type == TransactionType.income;
     final baseColor = isIncome ? Colors.green : Colors.red;
-
     final title = transaction.description ?? (isIncome ? 'Income' : 'Expense');
 
     return Column(
@@ -35,7 +34,7 @@ class TransactionTile extends ConsumerWidget {
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
           trailing: Text(
-            "${isIncome ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}",
+            "${isIncome ? '+' : '-'}\u20B9${transaction.amount.toStringAsFixed(2)}",
             style: TextStyle(fontWeight: FontWeight.bold, color: baseColor),
           ),
         ),
@@ -66,10 +65,7 @@ class TransactionTile extends ConsumerWidget {
     );
 
     if (confirm == true) {
-      await ref
-          .read(transactionProvider.notifier)
-          .deleteTransaction(transaction.id);
-
+      await ref.read(transactionProvider.notifier).deleteTransaction(transaction.id);
       await ref.read(walletProvider.notifier).loadWallets();
     }
   }

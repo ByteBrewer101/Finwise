@@ -6,10 +6,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-
 import '../../../home/presentation/providers/wallet_provider.dart';
 import '../../../home/presentation/providers/category_provider.dart';
-
 import '../../domain/models/budget.dart';
 import '../providers/budget_provider.dart';
 
@@ -73,7 +71,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     );
 
     await repo.addBudget(budget);
-
     ref.invalidate(budgetListProvider);
 
     if (mounted) Navigator.pop(context);
@@ -103,15 +100,13 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   label: 'Budget Name',
                 ),
                 const SizedBox(height: AppSpacing.lg),
-
                 _buildTextField(
                   controller: _amountController,
                   label: 'Amount',
                   keyboardType: TextInputType.number,
-                  prefix: '₹ ',
+                  prefix: '\u20B9 ',
                 ),
                 const SizedBox(height: AppSpacing.lg),
-
                 walletsAsync.when(
                   data: (wallets) {
                     return _buildDropdown(
@@ -132,7 +127,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   error: (_, __) => const Text('Error loading wallets'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-
                 categoriesAsync.when(
                   data: (categories) {
                     return _buildDropdown(
@@ -153,7 +147,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   error: (_, __) => const Text('Error loading categories'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-
                 _buildDropdown(
                   label: 'Recurrence',
                   value: _recurrence,
@@ -165,7 +158,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   onChanged: (val) => setState(() => _recurrence = val),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-
                 TextFormField(
                   controller: _startDateController,
                   readOnly: true,
@@ -178,7 +170,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                   onTap: _pickDate,
                 ),
                 const SizedBox(height: AppSpacing.xl),
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -217,8 +208,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
       controller: controller,
       keyboardType: keyboardType,
       decoration: _inputDecoration(label).copyWith(prefixText: prefix),
-      validator: (value) =>
-          value == null || value.isEmpty ? 'Enter $label' : null,
+      validator: (value) => value == null || value.isEmpty ? 'Enter $label' : null,
     );
   }
 

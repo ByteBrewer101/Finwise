@@ -6,7 +6,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
-
 import '../providers/auth_provider.dart';
 import '../../../../core/router/app_routes.dart';
 
@@ -32,7 +31,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       final authRepo = ref.read(authRepositoryProvider);
-
       await authRepo.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
@@ -61,36 +59,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome Back 👋',
+                    'Welcome Back',
                     style: AppTextStyles.headingLarge,
                   ),
-
                   const SizedBox(height: AppSpacing.sm),
-
-                   Text(
+                  Text(
                     'Login to continue managing your finances',
                     style: AppTextStyles.body,
                   ),
-
                   const SizedBox(height: AppSpacing.xl),
-
-                  /// Email
                   TextField(
                     controller: _emailController,
                     decoration: _inputDecoration('Email'),
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
-
-                  /// Password
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
                     decoration: _inputDecoration('Password'),
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
-
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -101,8 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
-
-                  /// Primary Login Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -111,8 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         backgroundColor: AppColors.primary,
                         minimumSize: const Size(double.infinity, 52),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.lg),
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
                         ),
                       ),
                       child: _isLoading
@@ -133,24 +118,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.md),
-
-                  /// Google Login
                   TextButton(
                     onPressed: _isLoading
                         ? null
                         : () async {
-                            final authRepo =
-                                ref.read(authRepositoryProvider);
+                            final authRepo = ref.read(authRepositoryProvider);
                             await authRepo.signInWithGoogle();
                           },
                     child: const Text('Continue with Google'),
                   ),
-
                   const SizedBox(height: AppSpacing.sm),
-
-                  /// Register
                   Center(
                     child: TextButton(
                       onPressed: () {

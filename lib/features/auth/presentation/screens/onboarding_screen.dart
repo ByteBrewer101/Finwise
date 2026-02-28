@@ -12,14 +12,11 @@ class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  ConsumerState<OnboardingScreen> createState() =>
-      _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState
-    extends ConsumerState<OnboardingScreen>
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     with SingleTickerProviderStateMixin {
-
   final PageController _pageController = PageController();
   int _currentIndex = 0;
   bool _showPanel = false;
@@ -33,8 +30,7 @@ class _OnboardingScreenState
     ),
     _OnboardingData(
       title: "Flexible",
-      description:
-          "We help our users to make the right financial decisions",
+      description: "We help our users to make the right financial decisions",
       image: "assets/images/onboarding2.png",
     ),
     _OnboardingData(
@@ -86,15 +82,10 @@ class _OnboardingScreenState
       backgroundColor: AppColors.primary,
       body: Stack(
         children: [
-
-          /// 🔹 TOP ILLUSTRATION AREA
           Positioned.fill(
             child: Column(
               children: [
-
                 const SizedBox(height: 70),
-
-                /// Skip
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
@@ -111,10 +102,7 @@ class _OnboardingScreenState
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                /// Placeholder image (replace later)
                 Expanded(
                   child: Image.asset(
                     _pages[_currentIndex].image,
@@ -123,21 +111,16 @@ class _OnboardingScreenState
                       Icons.cloud,
                       size: 180,
                       color: AppColors.primary.withValues(alpha: 0.1),
-
                     ),
                   ),
                 ),
               ],
             ),
           ),
-
-          /// 🔹 SLIDING PANEL
           AnimatedAlign(
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOutCubic,
-            alignment: _showPanel
-                ? Alignment.bottomCenter
-                : const Alignment(0, 1.2),
+            alignment: _showPanel ? Alignment.bottomCenter : const Alignment(0, 1.2),
             child: Container(
               height: screenHeight * 0.55,
               padding: const EdgeInsets.symmetric(
@@ -146,14 +129,10 @@ class _OnboardingScreenState
               ),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
               child: Column(
                 children: [
-
-                  /// Drag indicator
                   Container(
                     width: 48,
                     height: 5,
@@ -162,10 +141,7 @@ class _OnboardingScreenState
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.xl),
-
-                  /// PageView
                   Expanded(
                     child: PageView.builder(
                       controller: _pageController,
@@ -201,18 +177,14 @@ class _OnboardingScreenState
                       },
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
-
-                  /// Indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _pages.length,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 4),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
                         height: 8,
                         width: _currentIndex == index ? 24 : 8,
                         decoration: BoxDecoration(
@@ -224,16 +196,11 @@ class _OnboardingScreenState
                       ),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.xl),
-
                   PrimaryButton(
-                    label: _currentIndex == _pages.length - 1
-                        ? "Login"
-                        : "Next",
+                    label: _currentIndex == _pages.length - 1 ? "Login" : "Next",
                     onPressed: _next,
                   ),
-
                   if (_currentIndex == _pages.length - 1) ...[
                     const SizedBox(height: 12),
                     Row(
@@ -255,7 +222,6 @@ class _OnboardingScreenState
                       ],
                     ),
                   ],
-
                   const SizedBox(height: 12),
                 ],
               ),

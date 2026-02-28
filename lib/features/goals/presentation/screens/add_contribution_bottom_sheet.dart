@@ -30,17 +30,12 @@ class _AddContributionBottomSheetState
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    if (_selectedWalletId == null) return;
-
-    if (_loading) return;
+    if (_selectedWalletId == null || _loading) return;
 
     setState(() => _loading = true);
 
     try {
-      await ref
-          .read(goalsNotifierProvider.notifier)
-          .addContribution(
+      await ref.read(goalsNotifierProvider.notifier).addContribution(
             goalId: widget.goal.id,
             walletId: _selectedWalletId!,
             amount: double.parse(_amountController.text.trim()),
@@ -49,9 +44,9 @@ class _AddContributionBottomSheetState
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
       }
     }
 
@@ -77,9 +72,7 @@ class _AddContributionBottomSheetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Add Contribution", style: AppTextStyles.headingMedium),
-
                 const SizedBox(height: AppSpacing.lg),
-
                 DropdownButtonFormField<String>(
                   initialValue: _selectedWalletId,
                   decoration: const InputDecoration(labelText: "Select Wallet"),
@@ -88,7 +81,7 @@ class _AddContributionBottomSheetState
                         (w) => DropdownMenuItem(
                           value: w.id,
                           child: Text(
-                            "${w.name} (₹${w.balance.toStringAsFixed(0)})",
+                            "${w.name} (\u20B9${w.balance.toStringAsFixed(0)})",
                           ),
                         ),
                       )
@@ -96,9 +89,7 @@ class _AddContributionBottomSheetState
                   onChanged: (val) => setState(() => _selectedWalletId = val),
                   validator: (value) => value == null ? "Select wallet" : null,
                 ),
-
                 const SizedBox(height: AppSpacing.lg),
-
                 AppInputField(
                   controller: _amountController,
                   label: "Amount",
@@ -113,9 +104,7 @@ class _AddContributionBottomSheetState
                     return null;
                   },
                 ),
-
                 const SizedBox(height: AppSpacing.xl),
-
                 PrimaryButton(
                   label: _loading ? "Processing..." : "Confirm",
                   onPressed: _loading ? null : _submit,

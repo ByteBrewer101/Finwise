@@ -11,7 +11,7 @@ class BalanceSection extends StatelessWidget {
   const BalanceSection({
     super.key,
     required this.amount,
-    this.currencySymbol = '₹',
+    this.currencySymbol = '\u20B9',
   });
 
   @override
@@ -42,9 +42,7 @@ class BalanceSection extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-
             const SizedBox(height: AppSpacing.sm),
-
             Text(
               '$currencySymbol${amount.toStringAsFixed(2)}',
               style: const TextStyle(
@@ -53,9 +51,7 @@ class BalanceSection extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-
             const SizedBox(height: AppSpacing.md),
-
             Align(
               alignment: Alignment.centerRight,
               child: Container(

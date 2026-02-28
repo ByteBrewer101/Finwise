@@ -3,12 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:finwise/core/theme/app_spacing.dart';
-
 import '../../domain/models/budget.dart';
 import '../../domain/models/budget_summary.dart';
-
 import '../providers/budget_provider.dart';
-
 import '../widgets/budget_header.dart';
 import '../widgets/budget_summary_card.dart';
 import '../widgets/budget_grid_section.dart';
@@ -33,12 +30,10 @@ class BudgetScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const BudgetHeader(),
-
                   const SizedBox(height: AppSpacing.lg),
-
                   BudgetSummaryCard(
                     summary: _buildSummaryFromBudgets(budgets),
-                    currencySymbol: '₹',
+                    currencySymbol: '\u20B9',
                     onAddMore: () {
                       Navigator.push(
                         context,
@@ -49,9 +44,7 @@ class BudgetScreen extends ConsumerWidget {
                     },
                     onRebalance: () {},
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
-
                   BudgetGridSection(
                     budgets: budgets,
                     onPrimaryTap: () {
@@ -80,7 +73,6 @@ class BudgetScreen extends ConsumerWidget {
     );
   }
 
-  /// Build summary dynamically
   static BudgetSummary _buildSummaryFromBudgets(List<Budget> budgets) {
     double total = 0;
     double cash = 0;

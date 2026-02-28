@@ -30,7 +30,6 @@ abstract class GoalRepository {
     DateTime? endDate,
   });
 
-  // ✅ ADDED (Only this)
   Future<void> deleteGoal(String goalId);
 
   Future<List<GoalContribution>> fetchContributions(String goalId);

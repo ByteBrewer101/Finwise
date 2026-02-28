@@ -14,6 +14,7 @@ import '../widgets/balance_section.dart';
 import '../widgets/portfolio_card.dart';
 import '../widgets/transaction_section.dart';
 import 'add_transaction_screen.dart';
+import 'all_transactions_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -69,13 +70,23 @@ class HomeScreen extends ConsumerWidget {
                       BalanceSection(amount: totalBalance),
 
                       const SizedBox(height: AppSpacing.lg),
-                      PortfolioCard(summary: portfolioSummary),
+                      PortfolioCard(
+                        summary: portfolioSummary,
+                        transactions: transactions,
+                      ),
 
                       const SizedBox(height: AppSpacing.lg),
 
                       TransactionSection(
                         transactions: transactions,
-                        onSeeMore: () {},
+                        onSeeMore: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AllTransactionsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

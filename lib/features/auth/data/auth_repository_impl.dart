@@ -42,6 +42,36 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> updatePassword({
+    required String newPassword,
+  }) async {
+    await _client.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _client.auth.currentUser;
+    final email = user?.email;
+
+    if (user == null || email == null || email.isEmpty) {
+      throw Exception('User not authenticated');
+    }
+
+    // Verify current password first.
+    await _client.auth.signInWithPassword(
+      email: email,
+      password: currentPassword,
+    );
+
+    await updatePassword(newPassword: newPassword);
+  }
+
+  @override
   bool get isAuthenticated =>
       _client.auth.currentSession != null;
 }

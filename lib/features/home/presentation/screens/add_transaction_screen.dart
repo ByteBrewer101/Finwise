@@ -7,10 +7,8 @@ import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
-
 import '../../../budget/presentation/providers/budget_provider.dart';
 import '../../../budget/domain/models/budget.dart';
-
 import '../../domain/models/transaction.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/wallet_provider.dart';
@@ -21,8 +19,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key, this.preselectedBudgetId});
 
   @override
-  ConsumerState<AddTransactionScreen> createState() =>
-      _AddTransactionScreenState();
+  ConsumerState<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
@@ -51,7 +48,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
         _selectedWalletId = selectedBudget.walletId;
       } catch (_) {
-        // Do nothing if budget not yet loaded
+        // Budget may not be loaded yet.
       }
     }
   }
@@ -70,7 +67,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (userId == null) return;
 
     final amount = double.parse(_amountController.text);
-
     String? categoryId;
 
     if (_type == TransactionType.expense && _selectedBudgetId != null) {
@@ -79,12 +75,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         (b) => b.id == _selectedBudgetId,
       );
 
-      // 🔥 Budget validation
       if (amount > selectedBudget.remaining) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Amount exceeds remaining budget (₹ ${selectedBudget.remaining.toStringAsFixed(2)})',
+              'Amount exceeds remaining budget (\u20B9 ${selectedBudget.remaining.toStringAsFixed(2)})',
             ),
           ),
         );
@@ -128,7 +123,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              /// Transaction Type
               DropdownButtonFormField<TransactionType>(
                 initialValue: _type,
                 items: const [
@@ -150,18 +144,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   });
                 },
               ),
-
               const SizedBox(height: AppSpacing.lg),
-
-              /// Wallet Dropdown
               walletsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text(e.toString()),
                 data: (wallets) {
                   final selectedWallet = wallets.firstWhere(
                     (w) => w.id == _selectedWalletId,
-                    orElse: () =>
-                        wallets.isNotEmpty ? wallets.first : wallets.first,
+                    orElse: () => wallets.isNotEmpty ? wallets.first : wallets.first,
                   );
 
                   return Column(
@@ -182,8 +172,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             : (value) {
                                 setState(() => _selectedWalletId = value);
                               },
-                        validator: (value) =>
-                            value == null ? 'Select wallet' : null,
+                        validator: (value) => value == null ? 'Select wallet' : null,
                         decoration: const InputDecoration(labelText: 'Wallet'),
                       ),
                       const SizedBox(height: 8),
@@ -196,23 +185,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   );
                 },
               ),
-
               const SizedBox(height: AppSpacing.lg),
-
-              /// Budget Dropdown (Expense Only)
               if (_type == TransactionType.expense)
                 budgetsAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Text(e.toString()),
                   data: (budgets) {
                     if (budgets.isEmpty) return const SizedBox();
 
                     Budget? selectedBudget;
                     if (_selectedBudgetId != null) {
-                      selectedBudget = budgets.firstWhere(
-                        (b) => b.id == _selectedBudgetId,
-                      );
+                      selectedBudget = budgets.firstWhere((b) => b.id == _selectedBudgetId);
                     }
 
                     return Column(
@@ -237,9 +220,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               _selectedBudgetId = value;
 
                               if (value != null) {
-                                final b = budgets.firstWhere(
-                                  (budget) => budget.id == value,
-                                );
+                                final b = budgets.firstWhere((budget) => budget.id == value);
                                 _selectedWalletId = b.walletId;
                               }
                             });
@@ -248,7 +229,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             labelText: 'Select Budget (Optional)',
                           ),
                         ),
-
                         if (selectedBudget != null) ...[
                           const SizedBox(height: 8),
                           Text(
@@ -256,33 +236,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             style: AppTextStyles.bodyMuted,
                           ),
                         ],
-
                         const SizedBox(height: AppSpacing.lg),
                       ],
                     );
                   },
                 ),
-
-              /// Amount
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Amount'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter amount' : null,
+                validator: (value) => value == null || value.isEmpty ? 'Enter amount' : null,
               ),
-
               const SizedBox(height: AppSpacing.lg),
-
-              /// Description
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
               ),
-
               const SizedBox(height: AppSpacing.xl),
-
-              /// Save Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

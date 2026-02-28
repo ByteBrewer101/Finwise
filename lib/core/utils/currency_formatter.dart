@@ -2,17 +2,17 @@ class CurrencyFormatter {
   CurrencyFormatter._();
 
   static String symbol(String? currency) {
-    if (currency == null || currency.isEmpty) return "₹";
+    if (currency == null || currency.isEmpty) return "\u20B9";
 
     switch (currency.toUpperCase()) {
       case "INR":
-        return "₹";
+        return "\u20B9";
       case "USD":
         return "\$";
       case "IDR":
         return "Rp";
       default:
-        return currency; // fallback to raw currency code
+        return currency;
     }
   }
 

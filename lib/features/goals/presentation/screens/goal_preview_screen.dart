@@ -29,7 +29,6 @@ class GoalPreviewScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// HEADER
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -50,10 +49,7 @@ class GoalPreviewScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: AppSpacing.lg),
-
-                    /// CENTER
                     Center(
                       child: Column(
                         children: [
@@ -80,10 +76,7 @@ class GoalPreviewScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: AppSpacing.lg),
-
-                    /// PROGRESS BAR
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
@@ -93,9 +86,7 @@ class GoalPreviewScreen extends ConsumerWidget {
                         color: AppColors.primary,
                       ),
                     ),
-
                     const SizedBox(height: 6),
-
                     Align(
                       alignment: Alignment.centerRight,
                       child: Text(
@@ -103,10 +94,7 @@ class GoalPreviewScreen extends ConsumerWidget {
                         style: AppTextStyles.headingSmall,
                       ),
                     ),
-
                     const SizedBox(height: AppSpacing.xl),
-
-                    /// ACTION BUTTONS
                     Row(
                       children: [
                         Expanded(
@@ -121,8 +109,7 @@ class GoalPreviewScreen extends ConsumerWidget {
                                 context: context,
                                 isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
-                                builder: (_) =>
-                                    AddContributionBottomSheet(goal: goalAsync),
+                                builder: (_) => AddContributionBottomSheet(goal: goalAsync),
                               );
                             },
                             child: const Text("Add more"),
@@ -137,17 +124,11 @@ class GoalPreviewScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: AppSpacing.xl),
-
-                    /// CONTRIBUTIONS (keep async)
                     Text("Contributions", style: AppTextStyles.headingMedium),
-
                     const SizedBox(height: AppSpacing.md),
-
                     contributionsAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
+                      loading: () => const Center(child: CircularProgressIndicator()),
                       error: (e, _) => Center(child: Text(e.toString())),
                       data: (contributions) {
                         if (contributions.isEmpty) {
@@ -157,20 +138,17 @@ class GoalPreviewScreen extends ConsumerWidget {
                         return Column(
                           children: contributions.map((c) {
                             return Container(
-                              margin: const EdgeInsets.only(
-                                bottom: AppSpacing.md,
-                              ),
+                              margin: const EdgeInsets.only(bottom: AppSpacing.md),
                               padding: const EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "+ ₹${c.amount.toStringAsFixed(0)}",
+                                    "+ \u20B9${c.amount.toStringAsFixed(0)}",
                                     style: AppTextStyles.headingSmall,
                                   ),
                                   Text(
@@ -184,34 +162,22 @@ class GoalPreviewScreen extends ConsumerWidget {
                         );
                       },
                     ),
-
                     const SizedBox(height: AppSpacing.xl),
-
-                    /// DETAILS
                     Text("Details", style: AppTextStyles.headingMedium),
-
                     const SizedBox(height: AppSpacing.md),
-
                     _DetailRow(
                       title: "Target Amount",
-                      value: "₹ ${goalAsync.targetAmount.toStringAsFixed(0)}",
+                      value: "\u20B9 ${goalAsync.targetAmount.toStringAsFixed(0)}",
                     ),
-
                     const SizedBox(height: 8),
-
                     _DetailRow(
                       title: "Start Date",
-                      value:
-                          goalAsync.startDate?.toString().split(" ").first ??
-                          "-",
+                      value: goalAsync.startDate?.toString().split(" ").first ?? "-",
                     ),
-
                     const SizedBox(height: 8),
-
                     _DetailRow(
                       title: "End Date",
-                      value:
-                          goalAsync.endDate?.toString().split(" ").first ?? "-",
+                      value: goalAsync.endDate?.toString().split(" ").first ?? "-",
                     ),
                   ],
                 ),

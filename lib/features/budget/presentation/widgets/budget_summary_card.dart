@@ -20,6 +20,7 @@ class BudgetSummaryCard extends StatelessWidget {
     this.onAddMore,
     this.onRebalance,
   });
+
   String _formatCurrency(double amount) {
     final format = NumberFormat.currency(
       locale: 'en_IN',
@@ -47,12 +48,8 @@ class BudgetSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Title
           Text('Total Balance', style: AppTextStyles.body),
-
           const SizedBox(height: AppSpacing.sm),
-
-          /// Amount + Growth Chip
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -60,34 +57,27 @@ class BudgetSummaryCard extends StatelessWidget {
                 '$currencySymbol ${_formatCurrency(summary.totalBalance)}',
                 style: AppTextStyles.headingLarge,
               ),
-
               _GrowthChip(
                 percentage: summary.growthPercentage,
                 isPositive: summary.isGrowthPositive,
               ),
             ],
           ),
-
           const SizedBox(height: AppSpacing.md),
-
-          /// Cash split
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Cashless: ₹ ${_formatCurrency(summary.cashless)}',
+                'Cashless: \u20B9 ${_formatCurrency(summary.cashless)}',
                 style: AppTextStyles.body,
               ),
               Text(
-                'Cash: ₹ ${_formatCurrency(summary.cash)}',
+                'Cash: \u20B9 ${_formatCurrency(summary.cash)}',
                 style: AppTextStyles.body,
               ),
             ],
           ),
-
           const SizedBox(height: AppSpacing.lg),
-
-          /// Buttons
           Row(
             children: [
               Expanded(
@@ -100,7 +90,6 @@ class BudgetSummaryCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                   ),
-
                   child: const Text(
                     'Add More',
                     style: TextStyle(

@@ -26,10 +26,6 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     loadTransactions();
   }
 
-  /// ===============================
-  /// LOAD TRANSACTIONS
-  /// ===============================
-
   Future<void> loadTransactions() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
@@ -48,20 +44,15 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     }
   }
 
-  /// ===============================
-  /// ADD TRANSACTION
-  /// ===============================
-
   Future<void> addTransaction(Transaction transaction) async {
     try {
       final repo = ref.read(transactionRepositoryProvider);
 
       await repo.addTransaction(transaction);
 
-      // Reload transactions
       await loadTransactions();
 
-      // 🔥 CRITICAL: Reload wallets after trigger updates balance
+      // Reload wallets after trigger updates balances.
       await ref.read(walletProvider.notifier).loadWallets();
       ref.invalidate(budgetListProvider);
       ref.invalidate(budgetTransactionsProvider);
@@ -70,10 +61,6 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     }
   }
 
-  /// ===============================
-  /// DELETE TRANSACTION (Future Safe)
-  /// ===============================
-
   Future<void> deleteTransaction(String id) async {
     try {
       final repo = ref.read(transactionRepositoryProvider);
@@ -81,7 +68,6 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
       await repo.deleteTransaction(id);
 
       await loadTransactions();
-
       ref.read(walletProvider.notifier).loadWallets();
     } catch (e, st) {
       state = AsyncError(e, st);

@@ -4,16 +4,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/budget/presentation/screens/budget_screen.dart';
 import '../../features/analysis/presentation/screens/analysis_screen.dart';
 import '../../features/goals/presentation/screens/goals_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
-
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../providers/shared_prefs_provider.dart';
-
 import 'auth_notifier.dart';
 import 'app_routes.dart';
 import 'main_layout.dart';
@@ -35,7 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final goingToLogin = state.uri.path == AppRoutes.login;
       final goingToRegister = state.uri.path == AppRoutes.register;
 
-      // 1️⃣ FIRST LAUNCH → show onboarding only once
+      // 1) FIRST LAUNCH -> show onboarding only once
       if (isFirstLaunch) {
         if (!goingToOnboarding) {
           return AppRoutes.onboarding;
@@ -43,7 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // 2️⃣ Not logged in → go to login
+      // 2) Not logged in -> go to login/register
       if (!isLoggedIn) {
         if (!goingToLogin && !goingToRegister) {
           return AppRoutes.login;
@@ -51,7 +48,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // 3️⃣ Logged in → prevent going back to auth/onboarding
+      // 3) Logged in -> prevent auth/onboarding routes
       if (isLoggedIn &&
           (goingToLogin || goingToRegister || goingToOnboarding)) {
         return AppRoutes.home;
@@ -60,13 +57,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      /// ONBOARDING
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
-
-      /// AUTH ROUTES
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
@@ -75,8 +69,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
-
-      /// MAIN APP SHELL
       ShellRoute(
         builder: (context, state, child) {
           return MainLayout(child: child);

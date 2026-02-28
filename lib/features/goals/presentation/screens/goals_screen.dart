@@ -6,7 +6,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../shared/widgets/app_card_container.dart';
-
 import '../providers/goals_provider.dart';
 import '../../domain/models/goal.dart';
 import 'goal_preview_screen.dart';
@@ -32,7 +31,6 @@ class GoalsScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// HEADER
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Row(
@@ -54,12 +52,8 @@ class GoalsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-
-                /// TOTAL GOALS VALUE
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -68,27 +62,21 @@ class GoalsScreen extends ConsumerWidget {
                       Text(
                         CurrencyFormatter.format(
                           amount: totalValue,
-                          currency: goals.isNotEmpty
-                              ? goals.first.currency
-                              : null,
+                          currency: goals.isNotEmpty ? goals.first.currency : null,
                         ),
                         style: AppTextStyles.amount,
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: AppSpacing.lg),
-
-                /// GOALS LIST
                 Expanded(
                   child: goals.isEmpty
                       ? const Center(child: Text("No goals yet"))
                       : ListView.separated(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           itemCount: goals.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: AppSpacing.md),
+                          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                           itemBuilder: (context, index) {
                             final goal = goals[index];
                             return _GoalCard(goal: goal);
@@ -126,12 +114,8 @@ class _GoalCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// GOAL NAME
             Text(goal.name, style: AppTextStyles.headingSmall),
-
             const SizedBox(height: 6),
-
-            /// CURRENT AMOUNT
             Text(
               CurrencyFormatter.format(
                 amount: goal.currentAmount,
@@ -142,10 +126,7 @@ class _GoalCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-
             const SizedBox(height: 8),
-
-            /// PROGRESS BAR
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
@@ -155,12 +136,9 @@ class _GoalCard extends StatelessWidget {
                 minHeight: 6,
               ),
             ),
-
             const SizedBox(height: 6),
-
-            /// PERCENT TEXT
             Text(
-              "${percent.toStringAsFixed(0)}% • out of "
+              "${percent.toStringAsFixed(0)}% - out of "
               "${CurrencyFormatter.format(amount: goal.targetAmount, currency: goal.currency)}",
               style: AppTextStyles.bodySmall,
             ),
