@@ -1,12 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../services/local/local_database.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repository/profile_repository.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final SupabaseClient client;
+  final LocalDatabase localDb;
 
-  ProfileRepositoryImpl(this.client);
+  ProfileRepositoryImpl(this.client, this.localDb);
 
   @override
   Future<UserProfile> fetchProfile() async {
@@ -15,14 +17,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
       throw Exception('User not authenticated');
     }
 
-    final profileMap = await client
-        .from('profiles')
-        .select('id, full_name, phone, avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
-
     final fullNameFromAuth = user.userMetadata?['full_name'] as String?;
     final email = user.email ?? '';
+    final profileMap = localDb.getProfile(user.id);
 
     if (profileMap == null) {
       return UserProfile(
@@ -60,35 +57,26 @@ class ProfileRepositoryImpl implements ProfileRepository {
       throw Exception('User not authenticated');
     }
 
-    final payload = {
+    final now = DateTime.now().toIso8601String();
+    final payload = <String, dynamic>{
+      'id': user.id,
+      'user_id': user.id,
       'full_name': fullName.trim(),
       'phone': (phone != null && phone.trim().isNotEmpty) ? phone.trim() : null,
       'avatar_url': (avatarUrl != null && avatarUrl.trim().isNotEmpty)
           ? avatarUrl.trim()
           : null,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': now,
+      'created_at': localDb.getProfile(user.id)?['created_at'] ?? now,
     };
 
-    // Update existing row first (common path, does not require insert permission).
-    final updatedRows = await client
-        .from('profiles')
-        .update(payload)
-        .eq('id', user.id)
-        .select('id')
-        .maybeSingle();
-
-    // If profile row is missing (legacy users), create it.
-    if (updatedRows == null) {
-      await client.from('profiles').insert({
-        'id': user.id,
-        ...payload,
-      });
-    }
-
-    await client.auth.updateUser(
-      UserAttributes(
-        data: {'full_name': fullName.trim()},
-      ),
+    localDb.putProfile(payload);
+    await localDb.enqueueChange(
+      userId: user.id,
+      entity: 'profiles',
+      entityId: user.id,
+      operation: 'update',
+      payload: payload,
     );
 
     return fetchProfile();

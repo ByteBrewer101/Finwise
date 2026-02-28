@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_routes.dart';
+import '../../services/sync/sync_manager.dart';
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends ConsumerWidget {
   final Widget child;
 
   const MainLayout({super.key, required this.child});
@@ -37,12 +39,18 @@ class MainLayout extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
     final currentIndex = _locationToIndex(location);
+    final syncState = ref.watch(initialSyncStateProvider);
+    final shouldGate = currentIndex == 0 || currentIndex == 1 || currentIndex == 3;
+
+    final gatedChild = shouldGate && syncState == InitialSyncState.syncing
+        ? const Center(child: CircularProgressIndicator())
+        : child;
 
     return Scaffold(
-      body: child,
+      body: gatedChild,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) => _onTap(context, index),

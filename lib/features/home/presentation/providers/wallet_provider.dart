@@ -1,15 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/providers/global_providers.dart';
-import '../../data/datasource/wallet_remote_datasource.dart';
+import '../../../../services/sync/sync_service.dart';
 import '../../data/repository/wallet_repository_impl.dart';
 import '../../domain/models/wallet.dart';
 import '../../domain/repository/wallet_repository.dart';
 
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
-  final client = Supabase.instance.client;
-  return WalletRepositoryImpl(WalletRemoteDatasource(client));
+  final localDb = ref.read(localDatabaseProvider);
+  return WalletRepositoryImpl(localDb);
 });
 
 final walletProvider =
@@ -29,15 +28,22 @@ class WalletNotifier extends StateNotifier<AsyncValue<List<Wallet>>> {
       final userId = ref.read(currentUserIdProvider);
 
       if (userId == null) {
+        if (!mounted) return;
         state = const AsyncData([]);
         return;
       }
 
       final repo = ref.read(walletRepositoryProvider);
-      final wallets = await repo.fetchWallets(userId);
+      var wallets = await repo.fetchWallets(userId);
+      if (wallets.isEmpty) {
+        await ref.read(syncServiceProvider).syncNow();
+        wallets = await repo.fetchWallets(userId);
+      }
 
+      if (!mounted) return;
       state = AsyncData(wallets);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncError(e, st);
     }
   }

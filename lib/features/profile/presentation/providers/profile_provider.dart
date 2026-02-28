@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../services/sync/sync_service.dart';
 import '../../data/repository/profile_repository_impl.dart';
 import '../../domain/models/user_profile.dart';
 import '../../domain/repository/profile_repository.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   final client = Supabase.instance.client;
-  return ProfileRepositoryImpl(client);
+  final localDb = ref.read(localDatabaseProvider);
+  return ProfileRepositoryImpl(client, localDb);
 });
 
 final profileProvider =
@@ -26,8 +28,10 @@ class ProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
     try {
       final repo = ref.read(profileRepositoryProvider);
       final profile = await repo.fetchProfile();
+      if (!mounted) return;
       state = AsyncData(profile);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncError(e, st);
     }
   }
@@ -58,8 +62,10 @@ class ProfileNotifier extends StateNotifier<AsyncValue<UserProfile>> {
         phone: phone,
         avatarUrl: avatarUrl,
       );
+      if (!mounted) return;
       state = AsyncData(updated);
     } catch (_) {
+      if (!mounted) return;
       // Keep previous UI data visible; surface error via caller snackbar.
       if (previous != null) {
         state = AsyncData(previous);

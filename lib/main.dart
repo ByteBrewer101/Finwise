@@ -7,13 +7,16 @@ import 'core/providers/shared_prefs_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/env.dart';
 import 'core/router/app_router.dart';
+import 'services/local/local_database.dart';
 import 'services/data/supabase_client_provider.dart';
+import 'services/sync/sync_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive
   await Hive.initFlutter();
+  await LocalDatabase.instance.initialize();
 
   // Load env
   await Env.load(envFile: '.env.dev');
@@ -37,6 +40,7 @@ class FinWiseApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(syncBootstrapProvider);
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
