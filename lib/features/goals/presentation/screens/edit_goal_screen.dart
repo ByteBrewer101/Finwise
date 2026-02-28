@@ -129,13 +129,18 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
     setState(() => _loading = true);
 
     try {
+      final targetAmount = double.tryParse(_targetController.text.trim());
+      if (targetAmount == null || targetAmount <= 0) {
+        throw Exception('Enter a valid target amount');
+      }
+
       await ref
           .read(goalsNotifierProvider.notifier)
           .updateGoal(
             goalId: widget.goal.id,
             name: _nameController.text.trim(),
             targetFor: _targetForController.text.trim(),
-            targetAmount: double.parse(_targetController.text.trim()),
+            targetAmount: targetAmount,
             currency: _currency!,
             startDate: _startDate,
             endDate: _endDate,

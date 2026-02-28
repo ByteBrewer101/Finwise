@@ -34,13 +34,23 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     setState(() => _loading = true);
 
     try {
+      final targetAmount = double.tryParse(_targetController.text.trim());
+      final contribution = double.tryParse(_contributionController.text.trim());
+
+      if (targetAmount == null || targetAmount <= 0) {
+        throw Exception('Enter a valid target amount');
+      }
+      if (contribution == null || contribution <= 0) {
+        throw Exception('Enter a valid contribution amount');
+      }
+
       await ref
           .read(goalsNotifierProvider.notifier)
           .createGoal(
             name: _nameController.text.trim(),
             targetFor: _targetFor,
-            targetAmount: double.parse(_targetController.text.trim()),
-            contribution: double.parse(_contributionController.text.trim()),
+            targetAmount: targetAmount,
+            contribution: contribution,
             currency: "INR",
             startDate: _startDate,
             endDate: _endDate,

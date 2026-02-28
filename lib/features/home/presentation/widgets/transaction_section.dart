@@ -15,7 +15,14 @@ class TransactionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recentTransactions = transactions.take(5).toList();
+    final sortedTransactions = [...transactions]
+      ..sort((a, b) {
+        final byDate = b.transactionDate.compareTo(a.transactionDate);
+        if (byDate != 0) return byDate;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+    final recentTransactions = sortedTransactions.take(5).toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),

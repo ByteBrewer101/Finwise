@@ -21,6 +21,13 @@ class AllTransactionsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(e.toString())),
         data: (transactions) {
+          final sorted = [...transactions]
+            ..sort((a, b) {
+              final byDate = b.transactionDate.compareTo(a.transactionDate);
+              if (byDate != 0) return byDate;
+              return b.createdAt.compareTo(a.createdAt);
+            });
+
           if (transactions.isEmpty) {
             return const Center(
               child: Text('No transactions yet'),
@@ -29,9 +36,9 @@ class AllTransactionsScreen extends ConsumerWidget {
 
           return ListView.builder(
             padding: const EdgeInsets.all(AppSpacing.md),
-            itemCount: transactions.length,
+            itemCount: sorted.length,
             itemBuilder: (context, index) {
-              return TransactionTile(transaction: transactions[index]);
+              return TransactionTile(transaction: sorted[index]);
             },
           );
         },

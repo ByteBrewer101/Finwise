@@ -66,7 +66,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) return;
 
-    final amount = double.parse(_amountController.text);
+    final amount = double.tryParse(_amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid amount')),
+      );
+      return;
+    }
     String? categoryId;
 
     if (_type == TransactionType.expense && _selectedBudgetId != null) {
@@ -96,7 +102,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       categoryId: categoryId,
       budgetId: _selectedBudgetId,
       amount: amount,
-      description: _descriptionController.text,
+      description: _descriptionController.text.trim(),
       type: _type,
       transactionDate: DateTime.now(),
       createdAt: DateTime.now(),
@@ -245,12 +251,26 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Amount'),
-                validator: (value) => value == null || value.isEmpty ? 'Enter amount' : null,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Enter amount';
+                  final parsed = double.tryParse(value.trim());
+                  if (parsed == null || parsed <= 0) return 'Enter a valid number';
+                  return null;
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
+                validator: (value) {
+                  final requiresDescription =
+                      _type == TransactionType.expense && _selectedBudgetId != null;
+                  if (requiresDescription &&
+                      (value == null || value.trim().isEmpty)) {
+                    return 'Description is required for budget transactions';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
               SizedBox(

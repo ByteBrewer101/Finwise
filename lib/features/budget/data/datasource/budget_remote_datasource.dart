@@ -22,7 +22,8 @@ class BudgetRemoteDataSource {
         categories(name),
         wallets(name)
       ''')
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .order('id', ascending: false);
 
     final rawBudgets = (response as List)
         .map((e) => Budget.fromJson(e))

@@ -35,10 +35,15 @@ class _AddContributionBottomSheetState
     setState(() => _loading = true);
 
     try {
+      final amount = double.tryParse(_amountController.text.trim());
+      if (amount == null || amount <= 0) {
+        throw Exception('Enter a valid amount');
+      }
+
       await ref.read(goalsNotifierProvider.notifier).addContribution(
             goalId: widget.goal.id,
             walletId: _selectedWalletId!,
-            amount: double.parse(_amountController.text.trim()),
+            amount: amount,
           );
 
       if (mounted) Navigator.pop(context);

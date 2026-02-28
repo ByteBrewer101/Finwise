@@ -15,7 +15,8 @@ final budgetTransactionsProvider =
       .select()
       .eq('user_id', user.id)
       .eq('budget_id', budgetId)
-      .order('transaction_date', ascending: false);
+      .order('transaction_date', ascending: false)
+      .order('created_at', ascending: false);
 
   return (response as List)
       .map((e) => Transaction.fromMap(e))

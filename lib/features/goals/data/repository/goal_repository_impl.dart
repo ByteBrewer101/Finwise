@@ -20,7 +20,8 @@ class GoalRepositoryImpl implements GoalRepository {
     final response = await supabase
         .from('goals')
         .select()
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .order('id', ascending: false);
 
     return (response as List).map((e) => Goal.fromMap(e)).toList();
   }
@@ -94,7 +95,8 @@ class GoalRepositoryImpl implements GoalRepository {
         .from('goal_contributions')
         .select()
         .eq('goal_id', goalId)
-        .order('contributed_at', ascending: false);
+        .order('contributed_at', ascending: false)
+        .order('created_at', ascending: false);
 
     return (response as List).map((e) => GoalContribution.fromMap(e)).toList();
   }

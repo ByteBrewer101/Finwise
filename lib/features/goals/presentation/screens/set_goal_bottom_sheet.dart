@@ -152,13 +152,23 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
     setState(() => _loading = true);
 
     try {
+      final targetAmount = double.tryParse(_targetFundController.text.trim());
+      final contribution = double.tryParse(_contributionController.text.trim());
+
+      if (targetAmount == null || targetAmount <= 0) {
+        throw Exception('Enter a valid target fund amount');
+      }
+      if (contribution == null || contribution <= 0) {
+        throw Exception('Enter a valid contribution amount');
+      }
+
       await ref
           .read(goalsNotifierProvider.notifier)
           .createGoal(
             name: _nameController.text.trim(),
             targetFor: _targetForController.text.trim(),
-            targetAmount: double.parse(_targetFundController.text.trim()),
-            contribution: double.parse(_contributionController.text.trim()),
+            targetAmount: targetAmount,
+            contribution: contribution,
             currency: _currency!,
             startDate: _startDate,
             endDate: _endDate,

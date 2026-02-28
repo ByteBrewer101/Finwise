@@ -18,7 +18,8 @@ class TransactionRemoteDatasource {
         .from('transactions')
         .select() // includes budget_id automatically
         .eq('user_id', user.id)
-        .order('transaction_date', ascending: false);
+        .order('transaction_date', ascending: false)
+        .order('created_at', ascending: false);
 
     return (response as List).map((e) => Transaction.fromMap(e)).toList();
   }
