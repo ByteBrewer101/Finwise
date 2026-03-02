@@ -20,7 +20,6 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
 
   final _nameController = TextEditingController();
   final _targetForController = TextEditingController();
-  final _contributionController = TextEditingController();
   final _targetFundController = TextEditingController();
 
   String? _currency;
@@ -38,7 +37,6 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
   void dispose() {
     _nameController.dispose();
     _targetForController.dispose();
-    _contributionController.dispose();
     _targetFundController.dispose();
     super.dispose();
   }
@@ -153,13 +151,8 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
 
     try {
       final targetAmount = double.tryParse(_targetFundController.text.trim());
-      final contribution = double.tryParse(_contributionController.text.trim());
-
       if (targetAmount == null || targetAmount <= 0) {
         throw Exception('Enter a valid target fund amount');
-      }
-      if (contribution == null || contribution <= 0) {
-        throw Exception('Enter a valid contribution amount');
       }
 
       await ref
@@ -168,7 +161,7 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
             name: _nameController.text.trim(),
             targetFor: _targetForController.text.trim(),
             targetAmount: targetAmount,
-            contribution: contribution,
+            contribution: 0,
             currency: _currency!,
             startDate: _startDate,
             endDate: _endDate,
@@ -232,24 +225,6 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
                     label: "Target For",
                     validator: (v) =>
                         v == null || v.isEmpty ? "Enter target purpose" : null,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  AppInputField(
-                    controller: _contributionController,
-                    label: "Contribution",
-                    keyboardType: TextInputType.number,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return "Enter contribution";
-                      }
-                      final value = double.tryParse(v);
-                      if (value == null || value <= 0) {
-                        return "Enter valid amount";
-                      }
-                      return null;
-                    },
                   ),
 
                   const SizedBox(height: AppSpacing.lg),

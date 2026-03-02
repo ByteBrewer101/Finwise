@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/shared_prefs_provider.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_logger.dart';
 import 'core/utils/env.dart';
 import 'core/router/app_router.dart';
 import 'services/local/local_database.dart';
@@ -13,6 +16,14 @@ import 'services/sync/sync_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    AppLogger.error('Unhandled Flutter error', details.exception, details.stack);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    AppLogger.error('Unhandled platform error', error, stack);
+    return true;
+  };
 
   // Initialize Hive
   await Hive.initFlutter();

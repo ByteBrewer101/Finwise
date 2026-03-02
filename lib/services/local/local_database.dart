@@ -92,7 +92,7 @@ class LocalDatabase {
   List<Map<String, dynamic>> getCategories(String userId) {
     final rows = _categoriesBox.values
         .map(_asMap)
-        .where((row) => row['user_id'] == userId || row['is_default'] == true)
+        .where((row) => row['user_id'] == userId)
         .toList(growable: false);
     rows.sort((a, b) => _compareAsc(
           _parseDate(a['created_at']),
@@ -362,6 +362,22 @@ class LocalDatabase {
     await _syncQueueBox.delete(queueId);
   }
 
+  Future<String?> findPendingChangeId({
+    required String userId,
+    required String entity,
+    required String entityId,
+  }) async {
+    for (final raw in _syncQueueBox.values) {
+      final row = _asMap(raw);
+      if (row['user_id'] == userId &&
+          row['entity'] == entity &&
+          row['entity_id'] == entityId) {
+        return row['id'] as String;
+      }
+    }
+    return null;
+  }
+
   Future<void> markPendingChangeError(String queueId) async {
     final row = _syncQueueBox.get(queueId);
     if (row == null) return;
@@ -563,5 +579,35 @@ class LocalDatabase {
       return rightDate.compareTo(leftDate);
     }
     return (right ?? '').toString().compareTo((left ?? '').toString());
+  }
+
+  Future<void> clearUserData(String userId) async {
+    void deleteWhere(Box<dynamic> box, bool Function(Map<String, dynamic>) predicate) {
+      final keys = box.toMap().entries
+          .where((entry) => predicate(_asMap(entry.value)))
+          .map((entry) => entry.key)
+          .toList();
+      box.deleteAll(keys);
+    }
+
+    deleteWhere(_profilesBox, (row) => (row['id'] ?? row['user_id']) == userId);
+    deleteWhere(_walletsBox, (row) => row['user_id'] == userId);
+    deleteWhere(_categoriesBox, (row) => row['user_id'] == userId);
+    deleteWhere(_transactionsBox, (row) => row['user_id'] == userId);
+    deleteWhere(_budgetsBox, (row) => row['user_id'] == userId);
+    deleteWhere(_goalsBox, (row) => row['user_id'] == userId);
+    deleteWhere(_goalContributionsBox, (row) => row['user_id'] == userId);
+    deleteWhere(_syncQueueBox, (row) => row['user_id'] == userId);
+  }
+
+  Future<void> clearAllData() async {
+    await _profilesBox.clear();
+    await _walletsBox.clear();
+    await _categoriesBox.clear();
+    await _transactionsBox.clear();
+    await _budgetsBox.clear();
+    await _goalsBox.clear();
+    await _goalContributionsBox.clear();
+    await _syncQueueBox.clear();
   }
 }

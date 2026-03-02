@@ -1,5 +1,8 @@
 import 'package:finwise/features/home/presentation/providers/wallet_provider.dart';
+import 'package:finwise/features/home/presentation/providers/transaction_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../budget/presentation/providers/budget_provider.dart';
+import '../../../budget/presentation/providers/budget_transactions_provider.dart';
 import '../../data/repository/goal_repository_impl.dart';
 import '../../domain/repository/goal_repository.dart';
 import 'goals_provider.dart';
@@ -44,6 +47,10 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
       );
 
       ref.invalidate(goalsProvider);
+      ref.invalidate(transactionProvider);
+      ref.invalidate(budgetListProvider);
+      ref.invalidate(budgetTransactionsProvider);
+      ref.read(walletProvider.notifier).loadWallets();
 
       state = const AsyncData(null);
     } catch (e, st) {
@@ -80,6 +87,9 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
 
       ref.invalidate(goalsProvider);
       ref.invalidate(singleGoalProvider(goalId));
+      ref.invalidate(transactionProvider);
+      ref.invalidate(budgetListProvider);
+      ref.invalidate(budgetTransactionsProvider);
       ref.read(walletProvider.notifier).loadWallets();
       state = const AsyncData(null);
     } catch (e, st) {
@@ -101,6 +111,9 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
       ref.invalidate(goalsProvider);
       ref.invalidate(singleGoalProvider(goalId));
       ref.invalidate(goalContributionsProvider(goalId));
+      ref.invalidate(transactionProvider);
+      ref.invalidate(budgetListProvider);
+      ref.invalidate(budgetTransactionsProvider);
       await ref.read(walletProvider.notifier).loadWallets();
       state = const AsyncData(null);
     } catch (e, st) {
@@ -132,6 +145,9 @@ class GoalsNotifier extends StateNotifier<AsyncValue<void>> {
       ref.invalidate(goalContributionsProvider(goalId));
       ref.invalidate(singleGoalProvider(goalId));
       ref.invalidate(goalsProvider);
+      ref.invalidate(transactionProvider);
+      ref.invalidate(budgetListProvider);
+      ref.invalidate(budgetTransactionsProvider);
       ref.read(walletProvider.notifier).loadWallets();
     } catch (e, st) {
       state = AsyncError(e, st);

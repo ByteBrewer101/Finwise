@@ -19,7 +19,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
 
   final _nameController = TextEditingController();
   final _targetController = TextEditingController();
-  final _contributionController = TextEditingController();
 
   bool _loading = false;
 
@@ -35,13 +34,9 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
 
     try {
       final targetAmount = double.tryParse(_targetController.text.trim());
-      final contribution = double.tryParse(_contributionController.text.trim());
 
       if (targetAmount == null || targetAmount <= 0) {
         throw Exception('Enter a valid target amount');
-      }
-      if (contribution == null || contribution <= 0) {
-        throw Exception('Enter a valid contribution amount');
       }
 
       await ref
@@ -50,7 +45,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
             name: _nameController.text.trim(),
             targetFor: _targetFor,
             targetAmount: targetAmount,
-            contribution: contribution,
+            contribution: 0,
             currency: "INR",
             startDate: _startDate,
             endDate: _endDate,
@@ -108,21 +103,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
               ),
 
               const SizedBox(height: AppSpacing.lg),
-
-              AppInputField(
-                controller: _contributionController,
-                label: "Contribution",
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Enter contribution amount";
-                  }
-                  if (double.tryParse(value) == null) {
-                    return "Invalid number";
-                  }
-                  return null;
-                },
-              ),
 
               const SizedBox(height: AppSpacing.xl),
 

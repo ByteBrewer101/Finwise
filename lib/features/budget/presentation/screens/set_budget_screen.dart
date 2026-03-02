@@ -9,9 +9,12 @@ import '../../../home/presentation/providers/category_provider.dart';
 import '../../../home/presentation/providers/wallet_provider.dart';
 import '../../domain/models/budget.dart';
 import '../providers/budget_provider.dart';
+import '../providers/budget_transactions_provider.dart';
 
 class SetBudgetScreen extends ConsumerStatefulWidget {
-  const SetBudgetScreen({super.key});
+  final Budget? initialBudget;
+
+  const SetBudgetScreen({super.key, this.initialBudget});
 
   @override
   ConsumerState<SetBudgetScreen> createState() => _SetBudgetScreenState();
@@ -30,6 +33,23 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
   final String _currency = 'INR';
   DateTime? _selectedDate;
   bool _submitting = false;
+
+  bool get _isEditMode => widget.initialBudget != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final budget = widget.initialBudget;
+    if (budget != null) {
+      _budgetNameController.text = budget.name;
+      _amountController.text = budget.amount.toStringAsFixed(0);
+      _walletId = budget.walletId;
+      _categoryId = budget.categoryId;
+      _recurrence = budget.recurrence;
+      _selectedDate = budget.startDate;
+      _startDateController.text = DateFormat('dd MMM yyyy').format(budget.startDate);
+    }
+  }
 
   @override
   void dispose() {
@@ -56,7 +76,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     }
   }
 
-  Future<void> _createBudget() async {
+  Future<void> _saveBudget() async {
     if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
     if (_walletId == null ||
@@ -79,7 +99,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
       }
 
       final budget = Budget(
-        id: '',
+        id: widget.initialBudget?.id ?? '',
         name: _budgetNameController.text.trim(),
         amount: parsedAmount,
         categoryId: _categoryId!,
@@ -89,13 +109,20 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
         currency: _currency,
       );
 
-      await repo.addBudget(budget);
+      if (_isEditMode) {
+        await repo.updateBudget(budget);
+      } else {
+        await repo.addBudget(budget);
+      }
       ref.invalidate(budgetListProvider);
+      if (_isEditMode && widget.initialBudget != null) {
+        ref.invalidate(budgetTransactionsProvider(widget.initialBudget!.id));
+      }
 
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Budget created')),
+        SnackBar(content: Text(_isEditMode ? 'Budget updated' : 'Budget created')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -115,7 +142,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Set New Budget', style: AppTextStyles.headingLarge),
+        title: Text(_isEditMode ? 'Edit Budget' : 'Set New Budget', style: AppTextStyles.headingLarge),
         centerTitle: true,
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -216,7 +243,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
               SizedBox(
                 height: 58,
                 child: ElevatedButton(
-                  onPressed: _createBudget,
+                  onPressed: _saveBudget,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
@@ -233,7 +260,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                           ),
                         )
                       : const Text(
-                          'Create',
+                          'Save',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,

@@ -8,8 +8,17 @@ final supabaseProvider = Provider<SupabaseClient>((ref) {
   return ref.watch(supabaseClientProvider);
 });
 
+final authStateChangesProvider = StreamProvider<void>((ref) async* {
+  final client = ref.watch(supabaseProvider);
+  yield null;
+  await for (final _ in client.auth.onAuthStateChange) {
+    yield null;
+  }
+});
+
 /// Current Logged In User
 final currentUserProvider = Provider<User?>((ref) {
+  ref.watch(authStateChangesProvider);
   final client = ref.watch(supabaseProvider);
   return client.auth.currentUser;
 });

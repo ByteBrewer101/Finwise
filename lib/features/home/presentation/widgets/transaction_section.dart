@@ -6,11 +6,13 @@ import 'package:finwise/features/home/presentation/widgets/transaction_tile.dart
 class TransactionSection extends StatelessWidget {
   final List<Transaction> transactions;
   final VoidCallback? onSeeMore;
+  final bool showHeader;
 
   const TransactionSection({
     super.key,
     required this.transactions,
     this.onSeeMore,
+    this.showHeader = true,
   });
 
   @override
@@ -29,31 +31,31 @@ class TransactionSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Transaction",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              GestureDetector(
-                onTap: onSeeMore,
-                child: const Text(
-                  "See More",
+          if (showHeader) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Transaction",
                   style: TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: onSeeMore,
+                  child: const Text(
+                    "See More",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
 
           /// Empty State
           if (recentTransactions.isEmpty)

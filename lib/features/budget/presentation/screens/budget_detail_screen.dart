@@ -11,6 +11,7 @@ import '../../../home/presentation/screens/add_transaction_screen.dart';
 import '../../domain/models/budget.dart';
 import '../providers/budget_provider.dart';
 import '../providers/budget_transactions_provider.dart';
+import 'set_budget_screen.dart';
 
 class BudgetDetailScreen extends ConsumerWidget {
   final Budget budget;
@@ -42,7 +43,19 @@ class BudgetDetailScreen extends ConsumerWidget {
         ),
         centerTitle: true,
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.edit_outlined)),
+          IconButton(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SetBudgetScreen(initialBudget: liveBudget),
+                ),
+              );
+              ref.invalidate(budgetListProvider);
+              ref.invalidate(budgetTransactionsProvider(liveBudget.id));
+            },
+            icon: const Icon(Icons.edit_outlined),
+          ),
         ],
       ),
       body: ListView(

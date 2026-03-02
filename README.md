@@ -86,3 +86,52 @@ Important DB behavior:
 ## Next Focus
 
 Primary next milestone: complete Profile page (data + edit flow + logout + wallet/profile settings entry points).
+
+## Recent Reliability Fixes
+
+- Removed duplicate Home transaction heading (single investment history section).
+- Added strict user data isolation in local DB queries and sync.
+- Logout now clears:
+  - user-scoped local Hive data
+  - pending sync queue for that user
+  - cached auth tokens
+  - sync session bootstrap markers
+- Login flow hardened:
+  - email/password format validation
+  - request timeout handling
+  - mounted-safe loading state reset
+  - clearer auth/network error messages
+- Sync service hardened with timeout + retry for Supabase push/pull calls.
+- Added global crash logging hooks for Flutter and platform errors.
+
+## QA Test Matrix
+
+Authentication:
+- Login with valid credentials -> navigates to Home.
+- Login with invalid credentials -> error shown, loading stops.
+- Login with no/slow network -> timeout message shown, loading stops.
+- Logout -> redirected to auth flow and no prior user data remains in local cache.
+- Login with second account after logout -> balances/portfolio/goals must not show first account data.
+
+Portfolio/Data Isolation:
+- Home total balance equals sum of current user wallets only.
+- Budget and Goals tabs show only current user data.
+- Categories list contains only current user categories.
+
+Sync:
+- Cold start with network -> initial sync completes, then data visible.
+- App resume/background -> sync runs without crash.
+- Temporary sync failures -> retry path logs warning and app remains responsive.
+
+Performance:
+- Goals screen opens from local cache without forced network call.
+- No repeated loading loops when user has no goals.
+
+## Production Hardening Backlog
+
+Planned next items:
+- Pull-to-refresh on Home/Budget/Goals.
+- Session expiration UX handling.
+- Offline indicator + queued operation status.
+- Automated unit/integration tests in `test/`.
+- Performance monitoring hooks and startup/load benchmarks.

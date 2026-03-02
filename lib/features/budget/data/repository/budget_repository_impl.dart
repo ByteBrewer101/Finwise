@@ -56,4 +56,41 @@ class BudgetRepositoryImpl implements BudgetRepository {
       payload: row,
     );
   }
+
+  @override
+  Future<void> updateBudget(Budget budget) async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final existing = _localDb.getBudgetById(budget.id);
+    if (existing == null) {
+      throw Exception('Budget not found');
+    }
+
+    final row = {
+      ...existing,
+      'id': budget.id,
+      'user_id': user.id,
+      'name': budget.name,
+      'amount': budget.amount,
+      'category_id': budget.categoryId,
+      'wallet_id': budget.walletId,
+      'recurrence': budget.recurrence,
+      'start_date': budget.startDate.toIso8601String(),
+      'end_date': budget.endDate?.toIso8601String(),
+      'currency': budget.currency,
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+    _localDb.putBudget(row);
+    await _localDb.enqueueChange(
+      userId: user.id,
+      entity: 'budgets',
+      entityId: budget.id,
+      operation: 'update',
+      payload: row,
+    );
+  }
 }

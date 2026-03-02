@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -17,13 +20,24 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
   String? _error;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -35,15 +49,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-    } catch (e) {
+      if (!mounted) return;
+    } on TimeoutException {
+      if (!mounted) return;
       setState(() {
-        _error = "Invalid email or password";
+        _error = 'Request timed out. Check your internet and try again.';
       });
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Login failed. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -55,9 +83,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Center(
             child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Text(
                     'Welcome Back',
                     style: AppTextStyles.headingLarge,
@@ -68,14 +98,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: AppTextStyles.body,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  TextField(
+                  TextFormField(
                     controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      final email = (value ?? '').trim();
+                      if (email.isEmpty) return 'Enter email';
+                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                      if (!emailRegex.hasMatch(email)) return 'Enter a valid email';
+                      return null;
+                    },
                     decoration: _inputDecoration('Email'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  TextField(
+                  TextFormField(
                     controller: _passwordController,
                     obscureText: true,
+                    validator: (value) {
+                      final password = (value ?? '').trim();
+                      if (password.isEmpty) return 'Enter password';
+                      if (password.length < 8) return 'Password must be at least 8 characters';
+                      return null;
+                    },
                     decoration: _inputDecoration('Password'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -138,6 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
           ),

@@ -411,11 +411,21 @@ class _BudgetCard extends StatelessWidget {
                     backgroundColor: AppColors.divider,
                     valueColor: const AlwaysStoppedAnimation(Color(0xFF56C7D8)),
                   ),
-                  Text(
-                    '${(budget.progress * 100).toStringAsFixed(0)}%',
-                    style: AppTextStyles.body.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Text(
+                        '${(budget.progress * 100).toStringAsFixed(0)}%',
+                        textAlign: TextAlign.center,
+                        strutStyle: const StrutStyle(
+                          forceStrutHeight: true,
+                          height: 1,
+                        ),
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ],

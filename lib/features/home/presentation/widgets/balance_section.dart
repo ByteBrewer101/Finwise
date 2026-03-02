@@ -7,11 +7,15 @@ import 'package:finwise/core/theme/app_spacing.dart';
 class BalanceSection extends StatelessWidget {
   final double amount;
   final String currencySymbol;
+  final String title;
+  final VoidCallback? onDetailTap;
 
   const BalanceSection({
     super.key,
     required this.amount,
     this.currencySymbol = '\u20B9',
+    this.title = 'Total Balance',
+    this.onDetailTap,
   });
 
   @override
@@ -35,8 +39,8 @@ class BalanceSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Total Balance',
+            Text(
+              title,
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
@@ -54,20 +58,24 @@ class BalanceSection extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Align(
               alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: const Text(
-                  'Detail',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                onTap: onDetailTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                  child: const Text(
+                    'Detail',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

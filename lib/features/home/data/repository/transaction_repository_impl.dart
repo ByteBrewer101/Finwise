@@ -43,6 +43,31 @@ class TransactionRepositoryImpl implements TransactionRepository {
       'updated_at': now,
     };
 
+    final walletId = row['wallet_id'] as String?;
+    final txType = row['type'] as String?;
+    final amount = (row['amount'] as num).toDouble();
+    if (walletId != null && (txType == 'expense' || txType == 'transfer')) {
+      final wallet = localDb.getWalletById(walletId);
+      final balance = (wallet?['balance'] as num?)?.toDouble() ?? 0;
+      if (balance < amount) {
+        throw Exception('Insufficient wallet balance');
+      }
+    }
+
+    final budgetId = row['budget_id'] as String?;
+    if (txType == 'expense' && budgetId != null) {
+      final budget = localDb.getBudgetById(budgetId);
+      if (budget == null) {
+        throw Exception('Budget not found');
+      }
+      final spent = localDb.computeBudgetSpent(budgetId, user.id);
+      final target = (budget['amount'] as num?)?.toDouble() ?? 0;
+      final remaining = (target - spent).clamp(0, target);
+      if (amount > remaining) {
+        throw Exception('Amount exceeds remaining budget');
+      }
+    }
+
     localDb.putTransaction(row);
     localDb.applyWalletImpactForTransaction(row, isInsert: true);
     await localDb.enqueueChange(

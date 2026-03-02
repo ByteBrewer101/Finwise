@@ -82,6 +82,28 @@ class GoalRepositoryImpl implements GoalRepository {
     if (user == null) {
       throw Exception('User not authenticated');
     }
+    if (amount <= 0) {
+      throw Exception('Enter a valid contribution amount');
+    }
+
+    final goal = localDb.getGoalById(goalId);
+    if (goal == null) {
+      throw Exception('Goal not found');
+    }
+    final target = (goal['target_amount'] as num?)?.toDouble() ?? 0;
+    final current = (goal['current_amount'] as num?)?.toDouble() ?? 0;
+    final remainingGoal = (target - current).clamp(0, target);
+    if (amount > remainingGoal) {
+      throw Exception(
+        'Amount exceeds remaining goal (${remainingGoal.toStringAsFixed(2)})',
+      );
+    }
+
+    final wallet = localDb.getWalletById(walletId);
+    final balance = (wallet?['balance'] as num?)?.toDouble() ?? 0;
+    if (balance < amount) {
+      throw Exception('Insufficient wallet balance');
+    }
 
     final now = DateTime.now();
     final nowIso = now.toIso8601String();
@@ -211,4 +233,3 @@ class GoalRepositoryImpl implements GoalRepository {
     );
   }
 }
-

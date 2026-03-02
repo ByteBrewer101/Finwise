@@ -61,6 +61,8 @@ class _AddContributionBottomSheetState
   @override
   Widget build(BuildContext context) {
     final walletsAsync = ref.watch(walletProvider);
+    final remainingGoal =
+        (widget.goal.targetAmount - widget.goal.currentAmount).clamp(0, widget.goal.targetAmount);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -77,6 +79,11 @@ class _AddContributionBottomSheetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Add Contribution", style: AppTextStyles.headingMedium),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Remaining goal: \u20B9${remainingGoal.toStringAsFixed(2)}',
+                  style: AppTextStyles.bodySmall,
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedWalletId,
@@ -103,8 +110,24 @@ class _AddContributionBottomSheetState
                     if (value == null || value.isEmpty) {
                       return "Enter amount";
                     }
-                    if (double.tryParse(value) == null) {
+                    final parsed = double.tryParse(value);
+                    if (parsed == null) {
                       return "Invalid amount";
+                    }
+                    if (parsed <= 0) {
+                      return "Amount must be greater than 0";
+                    }
+                    if (parsed > remainingGoal) {
+                      return "Amount exceeds remaining goal";
+                    }
+                    final selectedWallet = wallets
+                        .where((w) => w.id == _selectedWalletId)
+                        .toList();
+                    if (selectedWallet.isNotEmpty) {
+                      final balance = selectedWallet.first.balance;
+                      if (parsed > balance) {
+                        return "Insufficient wallet balance";
+                      }
                     }
                     return null;
                   },
