@@ -18,6 +18,7 @@ class LocalDatabase {
   static const goalsBoxName = 'goals_box';
   static const goalContributionsBoxName = 'goal_contributions_box';
   static const syncQueueBoxName = 'sync_queue_box';
+  static const syncMetaBoxName = 'sync_meta_box';
 
   late final Box<dynamic> _profilesBox;
   late final Box<dynamic> _walletsBox;
@@ -27,6 +28,7 @@ class LocalDatabase {
   late final Box<dynamic> _goalsBox;
   late final Box<dynamic> _goalContributionsBox;
   late final Box<dynamic> _syncQueueBox;
+  late final Box<dynamic> _syncMetaBox;
 
   Future<void> initialize() async {
     _profilesBox = await Hive.openBox<dynamic>(profilesBoxName);
@@ -37,6 +39,19 @@ class LocalDatabase {
     _goalsBox = await Hive.openBox<dynamic>(goalsBoxName);
     _goalContributionsBox = await Hive.openBox<dynamic>(goalContributionsBoxName);
     _syncQueueBox = await Hive.openBox<dynamic>(syncQueueBoxName);
+    _syncMetaBox = await Hive.openBox<dynamic>(syncMetaBoxName);
+  }
+
+  String? getLastSyncAt(String userId) {
+    return _syncMetaBox.get('last_sync_$userId') as String?;
+  }
+
+  Future<void> setLastSyncAt(String userId, String timestampIso) async {
+    await _syncMetaBox.put('last_sync_$userId', timestampIso);
+  }
+
+  Future<void> clearLastSyncAt(String userId) async {
+    await _syncMetaBox.delete('last_sync_$userId');
   }
 
   bool hasAnyDataForUser(String userId) {
@@ -234,31 +249,19 @@ class LocalDatabase {
     final budget = getBudgetById(budgetId);
     if (budget == null) return 0;
 
-    final categoryId = budget['category_id'] as String?;
     final walletId = budget['wallet_id'] as String?;
-    if (categoryId == null) return 0;
-
-    final startDate = _parseDate(budget['start_date']);
-    final endDate = budget['end_date'] != null
-        ? _parseDate(budget['end_date'])
-        : DateTime.now();
 
     final transactions = getTransactions(userId);
     double spent = 0;
 
     for (final tx in transactions) {
       if ((tx['type'] as String?) != 'expense') continue;
-      final txDate = _parseDate(tx['transaction_date']);
-      if (txDate.isBefore(startDate) || txDate.isAfter(endDate)) continue;
 
       final txWalletId = tx['wallet_id'] as String?;
       if (walletId != null && txWalletId != walletId) continue;
 
       final txBudgetId = tx['budget_id'] as String?;
-      final txCategoryId = tx['category_id'] as String?;
-      final matchesBudget = txBudgetId == budgetId ||
-          (txBudgetId == null && txCategoryId == categoryId);
-      if (!matchesBudget) continue;
+      if (txBudgetId != budgetId) continue;
 
       spent += _toDouble(tx['amount']);
     }
@@ -347,6 +350,31 @@ class LocalDatabase {
           row['entity'] == entity &&
           row['entity_id'] == entityId;
     });
+  }
+
+  String? getPendingOperationForRecord({
+    required String userId,
+    required String entity,
+    required String entityId,
+  }) {
+    DateTime latestQueuedAt = DateTime.fromMillisecondsSinceEpoch(0);
+    String? latestOperation;
+
+    for (final raw in _syncQueueBox.values) {
+      final row = _asMap(raw);
+      if (row['user_id'] != userId ||
+          row['entity'] != entity ||
+          row['entity_id'] != entityId) {
+        continue;
+      }
+      final queuedAt = _parseDate(row['queued_at']);
+      if (queuedAt.isAfter(latestQueuedAt) || latestOperation == null) {
+        latestQueuedAt = queuedAt;
+        latestOperation = row['operation'] as String?;
+      }
+    }
+
+    return latestOperation;
   }
 
   List<Map<String, dynamic>> getPendingChanges(String userId) {
@@ -476,7 +504,17 @@ class LocalDatabase {
 
     for (final row in normalizedRows) {
       final id = row['id'] as String;
-      if (hasPendingChangeForRecord(userId: userId, entity: entity, entityId: id)) {
+      final pendingOperation = getPendingOperationForRecord(
+        userId: userId,
+        entity: entity,
+        entityId: id,
+      );
+      if (pendingOperation == 'delete') {
+        // Tombstone behavior: never resurrect locally deleted records.
+        continue;
+      }
+
+      if (pendingOperation != null) {
         final local = box.get(id);
         if (local != null) {
           final localMap = _asMap(local);
@@ -498,7 +536,15 @@ class LocalDatabase {
       if (map['user_id'] != userId) return false;
       final id = map['id'] as String;
       if (remoteIds.contains(id)) return false;
-      if (hasPendingChangeForRecord(userId: userId, entity: entity, entityId: id)) {
+      final pendingOperation = getPendingOperationForRecord(
+        userId: userId,
+        entity: entity,
+        entityId: id,
+      );
+      if (pendingOperation == 'delete') {
+        return true;
+      }
+      if (pendingOperation != null) {
         return false;
       }
       return true;
@@ -598,6 +644,7 @@ class LocalDatabase {
     deleteWhere(_goalsBox, (row) => row['user_id'] == userId);
     deleteWhere(_goalContributionsBox, (row) => row['user_id'] == userId);
     deleteWhere(_syncQueueBox, (row) => row['user_id'] == userId);
+    await clearLastSyncAt(userId);
   }
 
   Future<void> clearAllData() async {
@@ -609,5 +656,6 @@ class LocalDatabase {
     await _goalsBox.clear();
     await _goalContributionsBox.clear();
     await _syncQueueBox.clear();
+    await _syncMetaBox.clear();
   }
 }

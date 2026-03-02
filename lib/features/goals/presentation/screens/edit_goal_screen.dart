@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../domain/models/goal.dart';
@@ -31,6 +32,13 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
 
   bool _loading = false;
 
+  double? get _parsedTargetAmount => double.tryParse(_targetController.text.trim());
+  bool get _isTargetBelowCurrent {
+    final parsed = _parsedTargetAmount;
+    if (parsed == null) return false;
+    return parsed < widget.goal.currentAmount;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,10 +54,17 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
     _currency = widget.goal.currency;
     _startDate = widget.goal.startDate;
     _endDate = widget.goal.endDate;
+    _targetController.addListener(_onTargetChanged);
+  }
+
+  void _onTargetChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _targetController.removeListener(_onTargetChanged);
     _nameController.dispose();
     _targetController.dispose();
     _targetForController.dispose();
@@ -132,6 +147,9 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
       final targetAmount = double.tryParse(_targetController.text.trim());
       if (targetAmount == null || targetAmount <= 0) {
         throw Exception('Enter a valid target amount');
+      }
+      if (targetAmount < widget.goal.currentAmount) {
+        throw Exception('New target cannot be less than already invested amount.');
       }
 
       await ref
@@ -218,16 +236,28 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
                 label: "Target Amount",
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "Enter amount";
-                  }
-                  final value = double.tryParse(v);
-                  if (value == null || value <= 0) {
-                    return "Enter valid amount";
+                  final amountError = AppValidators.validatePositiveAmountInput(
+                    v,
+                    emptyMessage: 'Enter amount',
+                  );
+                  if (amountError != null) return amountError;
+                  final parsed = double.tryParse((v ?? '').trim());
+                  if (parsed != null && parsed < widget.goal.currentAmount) {
+                    return 'New target cannot be less than already invested amount.';
                   }
                   return null;
                 },
               ),
+              if (_isTargetBelowCurrent)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'New target cannot be less than already invested amount.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.red,
+                        ),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.lg),
               AppInputField(
                 controller: _targetForController,
@@ -274,7 +304,7 @@ class _EditGoalScreenState extends ConsumerState<EditGoalScreen> {
               const SizedBox(height: AppSpacing.xl),
               PrimaryButton(
                 label: _loading ? "Updating..." : "Update Goal",
-                onPressed: _loading ? null : _submit,
+                onPressed: (_loading || _isTargetBelowCurrent) ? null : _submit,
               ),
             ],
           ),

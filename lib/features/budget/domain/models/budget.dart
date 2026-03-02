@@ -2,7 +2,7 @@ class Budget {
   final String id;
   final String name;
   final double amount;
-  final String categoryId;
+  final String? categoryId;
   final String walletId;
   final String recurrence;
   final DateTime startDate;
@@ -17,7 +17,7 @@ class Budget {
     required this.id,
     required this.name,
     required this.amount,
-    required this.categoryId,
+    this.categoryId,
     required this.walletId,
     required this.recurrence,
     required this.startDate,
@@ -38,7 +38,7 @@ class Budget {
       id: json['id'],
       name: json['name'],
       amount: (json['amount'] as num).toDouble(),
-      categoryId: json['category_id'],
+      categoryId: json['category_id'] as String?,
       walletId: json['wallet_id'],
       recurrence: json['recurrence'],
       startDate: DateTime.parse(json['start_date']),

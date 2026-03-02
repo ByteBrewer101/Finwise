@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../home/presentation/providers/category_provider.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../home/presentation/providers/wallet_provider.dart';
 import '../../domain/models/budget.dart';
 import '../providers/budget_provider.dart';
@@ -33,8 +33,16 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
   final String _currency = 'INR';
   DateTime? _selectedDate;
   bool _submitting = false;
+  double _currentSpent = 0;
 
   bool get _isEditMode => widget.initialBudget != null;
+  double? get _parsedAmount => double.tryParse(_amountController.text.trim());
+  bool get _isAmountBelowSpent {
+    if (!_isEditMode) return false;
+    final parsed = _parsedAmount;
+    if (parsed == null) return false;
+    return parsed < _currentSpent;
+  }
 
   @override
   void initState() {
@@ -49,10 +57,17 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
       _selectedDate = budget.startDate;
       _startDateController.text = DateFormat('dd MMM yyyy').format(budget.startDate);
     }
+    _amountController.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _budgetNameController.dispose();
     _amountController.dispose();
     _startDateController.dispose();
@@ -80,7 +95,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
     if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
     if (_walletId == null ||
-        _categoryId == null ||
         _recurrence == null ||
         _selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,12 +111,15 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
       if (parsedAmount == null || parsedAmount <= 0) {
         throw Exception('Enter a valid amount');
       }
+      if (_isEditMode && parsedAmount < _currentSpent) {
+        throw Exception('New target cannot be less than already invested amount.');
+      }
 
       final budget = Budget(
         id: widget.initialBudget?.id ?? '',
         name: _budgetNameController.text.trim(),
         amount: parsedAmount,
-        categoryId: _categoryId!,
+        categoryId: _categoryId,
         walletId: _walletId!,
         recurrence: _recurrence!,
         startDate: _selectedDate!,
@@ -137,7 +154,20 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
   @override
   Widget build(BuildContext context) {
     final walletsAsync = ref.watch(walletProvider);
-    final categoriesAsync = ref.watch(categoryProvider);
+    final budgetsAsync = ref.watch(budgetListProvider);
+
+    if (_isEditMode) {
+      final budgetId = widget.initialBudget!.id;
+      _currentSpent = budgetsAsync.maybeWhen(
+        data: (budgets) {
+          for (final budget in budgets) {
+            if (budget.id == budgetId) return budget.spent;
+          }
+          return widget.initialBudget!.spent;
+        },
+        orElse: () => widget.initialBudget!.spent,
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -165,12 +195,28 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                 hint: 'Amount',
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Enter amount';
-                  final parsed = double.tryParse(value.trim());
-                  if (parsed == null || parsed <= 0) return 'Enter valid amount';
+                  final amountError = AppValidators.validatePositiveAmountInput(
+                    value,
+                    emptyMessage: 'Enter amount',
+                  );
+                  if (amountError != null) return amountError;
+                  if (_isEditMode) {
+                    final parsed = double.tryParse((value ?? '').trim());
+                    if (parsed != null && parsed < _currentSpent) {
+                      return 'New target cannot be less than already invested amount.';
+                    }
+                  }
                   return null;
                 },
               ),
+              if (_isEditMode && _isAmountBelowSpent)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'New target cannot be less than already invested amount.',
+                    style: AppTextStyles.bodySmall.copyWith(color: Colors.red),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.lg),
               walletsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -189,29 +235,6 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
                         .toList(),
                     onChanged: (val) => setState(() => _walletId = val),
                     validator: (value) => value == null ? 'Select wallet' : null,
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              categoriesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text(e.toString(), style: AppTextStyles.body),
-                data: (categories) {
-                  final expenseCategories = categories.where((c) => c.type == 'expense').toList();
-
-                  return _BudgetDropdown(
-                    value: _categoryId,
-                    hint: 'Budget For',
-                    items: expenseCategories
-                        .map(
-                          (c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) => setState(() => _categoryId = val),
-                    validator: (value) => value == null ? 'Select category' : null,
                   );
                 },
               ),
@@ -243,7 +266,7 @@ class _SetBudgetScreenState extends ConsumerState<SetBudgetScreen> {
               SizedBox(
                 height: 58,
                 child: ElevatedButton(
-                  onPressed: _saveBudget,
+                  onPressed: (_isAmountBelowSpent || _submitting) ? null : _saveBudget,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(

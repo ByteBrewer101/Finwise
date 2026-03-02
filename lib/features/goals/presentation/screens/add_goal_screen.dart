@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../providers/goals_notifier.dart';
@@ -92,13 +93,10 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                 label: "Target Fund",
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Enter target amount";
-                  }
-                  if (double.tryParse(value) == null) {
-                    return "Invalid number";
-                  }
-                  return null;
+                  return AppValidators.validatePositiveAmountInput(
+                    value,
+                    emptyMessage: 'Enter target amount',
+                  );
                 },
               ),
 

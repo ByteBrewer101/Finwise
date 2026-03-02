@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/section_header.dart';
@@ -16,6 +17,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -24,6 +26,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _success;
 
   Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -67,14 +71,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                   const SizedBox(height: AppSpacing.xl),
 
-                  AppInputField(controller: _emailController, label: "Email"),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        AppInputField(
+                          controller: _emailController,
+                          label: "Email",
+                          keyboardType: TextInputType.emailAddress,
+                          validator: AppValidators.validateEmail,
+                        ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.lg),
 
-                  AppInputField(
-                    controller: _passwordController,
-                    label: "Password",
-                    obscureText: true,
+                        AppInputField(
+                          controller: _passwordController,
+                          label: "Password",
+                          obscureText: true,
+                          validator: AppValidators.validatePasswordStrength,
+                        ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.lg),

@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/storage/token_storage.dart';
+import '../../../core/utils/validators.dart';
 import '../../../services/local/local_database.dart';
 import '../../../services/sync/sync_service.dart';
 import '../domain/auth_repository.dart';
@@ -25,6 +26,10 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    AppValidators.ensureValidEmail(email);
+    if (password.trim().isEmpty) {
+      throw Exception('Password is required');
+    }
     await _client.auth
         .signInWithPassword(
           email: email,
@@ -38,6 +43,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    AppValidators.ensureValidEmail(email);
+    AppValidators.ensureStrongPassword(password);
     await _client.auth.signUp(
       email: email,
       password: password,
@@ -84,6 +91,10 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null || email == null || email.isEmpty) {
       throw Exception('User not authenticated');
     }
+    if (currentPassword.trim().isEmpty) {
+      throw Exception('Current password is required');
+    }
+    AppValidators.ensureStrongPassword(newPassword);
 
     // Verify current password first.
     await _client.auth

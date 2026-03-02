@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/utils/validators.dart';
 import '../../../../services/local/local_database.dart';
 import '../../domain/models/budget.dart';
 import '../../domain/repository/budget_repository.dart';
@@ -30,6 +31,11 @@ class BudgetRepositoryImpl implements BudgetRepository {
     if (user == null) {
       throw Exception('User not authenticated');
     }
+
+    AppValidators.ensurePositiveAmount(
+      budget.amount,
+      message: 'Budget amount must be greater than 0',
+    );
 
     final now = DateTime.now().toIso8601String();
     final row = {
@@ -64,10 +70,21 @@ class BudgetRepositoryImpl implements BudgetRepository {
       throw Exception('User not authenticated');
     }
 
+    AppValidators.ensurePositiveAmount(
+      budget.amount,
+      message: 'Budget amount must be greater than 0',
+    );
+
     final existing = _localDb.getBudgetById(budget.id);
     if (existing == null) {
       throw Exception('Budget not found');
     }
+    final spent = _localDb.computeBudgetSpent(budget.id, user.id);
+    AppValidators.ensureAmountNotExceeding(
+      amount: spent,
+      maxAllowed: budget.amount,
+      message: 'New target cannot be less than already invested amount.',
+    );
 
     final row = {
       ...existing,

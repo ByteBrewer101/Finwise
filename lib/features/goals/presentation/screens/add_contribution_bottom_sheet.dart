@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../home/presentation/providers/wallet_provider.dart';
@@ -107,16 +108,9 @@ class _AddContributionBottomSheetState
                   label: "Amount",
                   keyboardType: TextInputType.number,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Enter amount";
-                    }
-                    final parsed = double.tryParse(value);
-                    if (parsed == null) {
-                      return "Invalid amount";
-                    }
-                    if (parsed <= 0) {
-                      return "Amount must be greater than 0";
-                    }
+                    final amountError = AppValidators.validatePositiveAmountInput(value);
+                    if (amountError != null) return amountError;
+                    final parsed = double.tryParse((value ?? '').trim())!;
                     if (parsed > remainingGoal) {
                       return "Amount exceeds remaining goal";
                     }

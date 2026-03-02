@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/utils/validators.dart';
 import '../../../../services/local/local_database.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/repository/transaction_repository.dart';
@@ -46,12 +47,15 @@ class TransactionRepositoryImpl implements TransactionRepository {
     final walletId = row['wallet_id'] as String?;
     final txType = row['type'] as String?;
     final amount = (row['amount'] as num).toDouble();
+    AppValidators.ensurePositiveAmount(amount);
     if (walletId != null && (txType == 'expense' || txType == 'transfer')) {
       final wallet = localDb.getWalletById(walletId);
       final balance = (wallet?['balance'] as num?)?.toDouble() ?? 0;
-      if (balance < amount) {
-        throw Exception('Insufficient wallet balance');
-      }
+      AppValidators.ensureAmountNotExceeding(
+        amount: amount,
+        maxAllowed: balance,
+        message: 'Insufficient wallet balance',
+      );
     }
 
     final budgetId = row['budget_id'] as String?;
@@ -62,10 +66,12 @@ class TransactionRepositoryImpl implements TransactionRepository {
       }
       final spent = localDb.computeBudgetSpent(budgetId, user.id);
       final target = (budget['amount'] as num?)?.toDouble() ?? 0;
-      final remaining = (target - spent).clamp(0, target);
-      if (amount > remaining) {
-        throw Exception('Amount exceeds remaining budget');
-      }
+      final remaining = (target - spent).clamp(0, target).toDouble();
+      AppValidators.ensureAmountNotExceeding(
+        amount: amount,
+        maxAllowed: remaining,
+        message: 'Amount exceeds remaining budget',
+      );
     }
 
     localDb.putTransaction(row);

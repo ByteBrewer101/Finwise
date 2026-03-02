@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
+import '../../../../core/utils/validators.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/router/app_routes.dart';
 
@@ -101,25 +102,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      final email = (value ?? '').trim();
-                      if (email.isEmpty) return 'Enter email';
-                      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                      if (!emailRegex.hasMatch(email)) return 'Enter a valid email';
-                      return null;
-                    },
+                    validator: AppValidators.validateEmail,
                     decoration: _inputDecoration('Email'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    validator: (value) {
-                      final password = (value ?? '').trim();
-                      if (password.isEmpty) return 'Enter password';
-                      if (password.length < 8) return 'Password must be at least 8 characters';
-                      return null;
-                    },
+                    validator: AppValidators.validatePasswordRequired,
                     decoration: _inputDecoration('Password'),
                   ),
                   const SizedBox(height: AppSpacing.lg),

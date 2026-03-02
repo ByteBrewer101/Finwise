@@ -33,9 +33,17 @@ class SyncService {
 
     final isFirstInitForUser = _initializedUserId != user.id;
     _initializedUserId = user.id;
+    final lastSyncAt = _localDb.getLastSyncAt(user.id);
+    final shouldFullPull =
+        isFirstInitForUser || lastSyncAt == null || !_localDb.hasAnyDataForUser(user.id);
 
-    if (isFirstInitForUser || !_localDb.hasAnyDataForUser(user.id)) {
-      await _pullRemoteSnapshot(user.id, mergeOnly: false);
+    if (shouldFullPull) {
+      await _pullRemoteSnapshot(
+        user.id,
+        mergeOnly: false,
+        sinceUpdatedAtIso: null,
+      );
+      await _localDb.setLastSyncAt(user.id, DateTime.now().toUtc().toIso8601String());
     }
 
     await syncNow();
@@ -49,10 +57,15 @@ class SyncService {
     _syncing = true;
     try {
       await _pushPendingChanges(user.id);
+      final lastSyncAt = _localDb.getLastSyncAt(user.id);
+      final hasPending = _localDb.hasPendingChanges(user.id);
+      final isDeltaPull = lastSyncAt != null;
       await _pullRemoteSnapshot(
         user.id,
-        mergeOnly: _localDb.hasPendingChanges(user.id),
+        mergeOnly: hasPending || isDeltaPull,
+        sinceUpdatedAtIso: lastSyncAt,
       );
+      await _localDb.setLastSyncAt(user.id, DateTime.now().toUtc().toIso8601String());
     } finally {
       _syncing = false;
     }
@@ -187,141 +200,175 @@ class SyncService {
     }
   }
 
-  Future<void> _pullRemoteSnapshot(String userId, {required bool mergeOnly}) async {
+  Future<void> _pullRemoteSnapshot(
+    String userId, {
+    required bool mergeOnly,
+    required String? sinceUpdatedAtIso,
+  }) async {
+    final isDeltaPull = sinceUpdatedAtIso != null;
+
     try {
-      final profile = await _withRetry(
-        () => _client
-            .from('profiles')
-            .select('id, full_name, phone, avatar_url, created_at, updated_at')
-            .eq('id', userId)
-            .maybeSingle()
-            .timeout(const Duration(seconds: 15)),
-      );
-      if (profile != null) {
-        final profileRow = Map<String, dynamic>.from(profile);
-        profileRow['id'] = userId;
-        _localDb.replaceProfilesForUser(userId, [profileRow]);
+      if (isDeltaPull) {
+        final profileList = await _withRetry(
+          () => _client
+              .from('profiles')
+              .select('id, full_name, phone, avatar_url, created_at, updated_at')
+              .eq('id', userId)
+              .gt('updated_at', sinceUpdatedAtIso)
+              .timeout(const Duration(seconds: 15)),
+        );
+        if ((profileList as List).isNotEmpty) {
+          final profileRow = Map<String, dynamic>.from(profileList.first as Map);
+          profileRow['id'] = userId;
+          _localDb.replaceProfilesForUser(userId, [profileRow]);
+        }
+      } else {
+        final profile = await _withRetry(
+          () => _client
+              .from('profiles')
+              .select('id, full_name, phone, avatar_url, created_at, updated_at')
+              .eq('id', userId)
+              .maybeSingle()
+              .timeout(const Duration(seconds: 15)),
+        );
+        if (profile != null) {
+          final profileRow = Map<String, dynamic>.from(profile);
+          profileRow['id'] = userId;
+          _localDb.replaceProfilesForUser(userId, [profileRow]);
+        }
       }
     } catch (e) {
       AppLogger.warning('Sync pull profile failed: $e');
     }
 
     try {
-      final walletsRaw = await _withRetry(
-        () => _client
-            .from('wallets')
-            .select()
-            .eq('user_id', userId)
-            .timeout(const Duration(seconds: 15)),
+      final walletsRaw = await _fetchRows(
+        table: 'wallets',
+        userId: userId,
+        sinceUpdatedAtIso: sinceUpdatedAtIso,
       );
       _localDb.replaceWalletsForUser(
         userId,
         List<Map<String, dynamic>>.from(walletsRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull wallets failed: $e');
     }
 
     try {
-      final categoriesRaw = await _withRetry(
-        () => _client
-            .from('categories')
-            .select()
-            .eq('user_id', userId)
-            .timeout(const Duration(seconds: 15)),
+      final categoriesRaw = await _fetchRows(
+        table: 'categories',
+        userId: userId,
+        sinceUpdatedAtIso: sinceUpdatedAtIso,
       );
       _localDb.replaceCategoriesForUser(
         userId,
         List<Map<String, dynamic>>.from(categoriesRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull categories failed: $e');
     }
 
     try {
-      final transactionsRaw = await _withRetry(
-        () => _client
-            .from('transactions')
-            .select()
-            .eq('user_id', userId)
-            .timeout(const Duration(seconds: 15)),
+      final transactionsRaw = await _fetchRows(
+        table: 'transactions',
+        userId: userId,
+        sinceUpdatedAtIso: sinceUpdatedAtIso,
       );
       _localDb.replaceTransactionsForUser(
         userId,
         List<Map<String, dynamic>>.from(transactionsRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull transactions failed: $e');
     }
 
     try {
+      final budgetsQuery = _client
+          .from('budgets')
+          .select('''
+            id,
+            user_id,
+            name,
+            amount,
+            recurrence,
+            start_date,
+            end_date,
+            currency,
+            category_id,
+            wallet_id,
+            created_at,
+            updated_at,
+            categories(name),
+            wallets(name)
+          ''')
+          .eq('user_id', userId);
       final budgetsRaw = await _withRetry(
-        () => _client
-            .from('budgets')
-            .select('''
-              id,
-              user_id,
-              name,
-              amount,
-              recurrence,
-              start_date,
-              end_date,
-              currency,
-              category_id,
-              wallet_id,
-              created_at,
-              updated_at,
-              categories(name),
-              wallets(name)
-            ''')
-            .eq('user_id', userId)
+        () => (isDeltaPull
+                ? budgetsQuery.gt('updated_at', sinceUpdatedAtIso)
+                : budgetsQuery)
             .timeout(const Duration(seconds: 15)),
       );
       _localDb.replaceBudgetsForUser(
         userId,
         List<Map<String, dynamic>>.from(budgetsRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull budgets failed: $e');
     }
 
     try {
-      final goalsRaw = await _withRetry(
-        () => _client
-            .from('goals')
-            .select()
-            .eq('user_id', userId)
-            .timeout(const Duration(seconds: 15)),
+      final goalsRaw = await _fetchRows(
+        table: 'goals',
+        userId: userId,
+        sinceUpdatedAtIso: sinceUpdatedAtIso,
       );
       _localDb.replaceGoalsForUser(
         userId,
         List<Map<String, dynamic>>.from(goalsRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull goals failed: $e');
     }
 
     try {
+      final contributionsQuery = _client
+          .from('goal_contributions')
+          .select()
+          .eq('user_id', userId);
       final contributionsRaw = await _withRetry(
-        () => _client
-            .from('goal_contributions')
-            .select()
-            .eq('user_id', userId)
+        () => (isDeltaPull
+                ? contributionsQuery.gt('created_at', sinceUpdatedAtIso)
+                : contributionsQuery)
             .timeout(const Duration(seconds: 15)),
       );
       _localDb.replaceGoalContributionsForUser(
         userId,
         List<Map<String, dynamic>>.from(contributionsRaw),
-        mergeOnly: mergeOnly,
+        mergeOnly: mergeOnly || isDeltaPull,
       );
     } catch (e) {
       AppLogger.warning('Sync pull goal_contributions failed: $e');
     }
+  }
+
+  Future<List<dynamic>> _fetchRows({
+    required String table,
+    required String userId,
+    required String? sinceUpdatedAtIso,
+  }) async {
+    final query = _client.from(table).select().eq('user_id', userId);
+    return _withRetry(
+      () => (sinceUpdatedAtIso != null
+              ? query.gt('updated_at', sinceUpdatedAtIso)
+              : query)
+          .timeout(const Duration(seconds: 15)),
+    );
   }
 
   Future<T> _withRetry<T>(

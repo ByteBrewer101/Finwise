@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/utils/validators.dart';
 import '../../../../services/data/supabase_client_provider.dart';
 import '../../../../services/local/local_database.dart';
 import '../../../../services/sync/sync_service.dart';
@@ -47,6 +48,10 @@ class GoalRepositoryImpl implements GoalRepository {
 
     final now = DateTime.now().toIso8601String();
     final goalId = _uuid.v4();
+    AppValidators.ensurePositiveAmount(
+      targetAmount,
+      message: 'Enter a valid target fund amount',
+    );
     final row = {
       'id': goalId,
       'user_id': user.id,
@@ -82,9 +87,10 @@ class GoalRepositoryImpl implements GoalRepository {
     if (user == null) {
       throw Exception('User not authenticated');
     }
-    if (amount <= 0) {
-      throw Exception('Enter a valid contribution amount');
-    }
+    AppValidators.ensurePositiveAmount(
+      amount,
+      message: 'Enter a valid contribution amount',
+    );
 
     final goal = localDb.getGoalById(goalId);
     if (goal == null) {
@@ -93,17 +99,19 @@ class GoalRepositoryImpl implements GoalRepository {
     final target = (goal['target_amount'] as num?)?.toDouble() ?? 0;
     final current = (goal['current_amount'] as num?)?.toDouble() ?? 0;
     final remainingGoal = (target - current).clamp(0, target);
-    if (amount > remainingGoal) {
-      throw Exception(
-        'Amount exceeds remaining goal (${remainingGoal.toStringAsFixed(2)})',
-      );
-    }
+    AppValidators.ensureAmountNotExceeding(
+      amount: amount,
+      maxAllowed: remainingGoal.toDouble(),
+      message: 'Amount exceeds remaining goal (${remainingGoal.toStringAsFixed(2)})',
+    );
 
     final wallet = localDb.getWalletById(walletId);
     final balance = (wallet?['balance'] as num?)?.toDouble() ?? 0;
-    if (balance < amount) {
-      throw Exception('Insufficient wallet balance');
-    }
+    AppValidators.ensureAmountNotExceeding(
+      amount: amount,
+      maxAllowed: balance,
+      message: 'Insufficient wallet balance',
+    );
 
     final now = DateTime.now();
     final nowIso = now.toIso8601String();
@@ -180,6 +188,16 @@ class GoalRepositoryImpl implements GoalRepository {
     if (existing == null) {
       throw Exception('Goal not found');
     }
+    AppValidators.ensurePositiveAmount(
+      targetAmount,
+      message: 'Enter a valid target amount',
+    );
+    final currentAmount = (existing['current_amount'] as num?)?.toDouble() ?? 0;
+    AppValidators.ensureAmountNotExceeding(
+      amount: currentAmount,
+      maxAllowed: targetAmount,
+      message: 'New target cannot be less than already invested amount.',
+    );
 
     final updated = Map<String, dynamic>.from(existing);
     updated['name'] = name;

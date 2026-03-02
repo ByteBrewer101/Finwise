@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/app_input_field.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../providers/goals_notifier.dart';
@@ -234,14 +235,10 @@ class _SetGoalBottomSheetState extends ConsumerState<SetGoalBottomSheet> {
                     label: "Target Fund",
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return "Enter target amount";
-                      }
-                      final value = double.tryParse(v);
-                      if (value == null || value <= 0) {
-                        return "Enter valid amount";
-                      }
-                      return null;
+                      return AppValidators.validatePositiveAmountInput(
+                        v,
+                        emptyMessage: 'Enter target amount',
+                      );
                     },
                   ),
 
