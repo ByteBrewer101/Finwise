@@ -55,6 +55,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.google,
+      redirectTo: 'io.supabase.flutter://login-callback',
     );
   }
 

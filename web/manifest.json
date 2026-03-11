@@ -1,6 +1,6 @@
 {
-    "name": "finwise",
-    "short_name": "finwise",
+    "name": "Finwise",
+    "short_name": "Finwise",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

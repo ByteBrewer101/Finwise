@@ -1,53 +1,158 @@
-# FinWise
+# Finwise
 
-FinWise is a Flutter personal finance app built with Riverpod and Supabase.
+Finwise is a Flutter personal finance app built with Riverpod, Supabase, and a local-first data flow. The app uses local storage for day-to-day reads/writes and syncs with Supabase in the background, so the UI stays responsive and user data remains isolated per account.
 
-Current scope:
-- Auth (email/password + Google via Supabase Auth)
-- Onboarding and guarded routing
-- Home summary (wallet balance + transactions)
-- Budget creation and tracking
-- Goals and contributions
-- Basic profile tab (UI pending completion)
+AI features are intentionally out of scope for now.
 
-Out of scope for now:
-- AI assistant/features (explicitly deferred)
+## Current Status
 
-## Design Source
+Implemented:
+- Onboarding flow with animated bottom-panel interaction
+- Email/password auth
+- Google OAuth auth for mobile deep link flow
+- Auth-guarded routing with first-launch handling
+- Home dashboard
+- Add transaction flow
+- Full budget flow
+- Full goals flow
+- Analysis screen with Income / Expenses / Saving tabs
+- Profile screen with edit profile and change password
+- Local-first persistence with background Supabase sync
 
-UI implementation is based on provided Figma reference screenshots. Functionality should remain unchanged while UI is aligned progressively.
+In progress / not implemented:
+- AI assistant features
+- Some secondary actions still show `Feature coming soon`
+- Automated test coverage is still minimal compared to the app surface
 
 ## Tech Stack
 
 - Flutter
 - Riverpod
 - GoRouter
-- Supabase (Auth + Postgres)
+- Supabase Auth + Postgres
+- Hive for local persistence
 - SharedPreferences
-- Hive (initialized; not primary persistence for domain data)
+- fl_chart
 
-## Project Structure
+## Architecture
 
-`lib/`
-- `core/` theme, router, providers, utils
-- `features/` auth, home, budget, goals, analysis, profile
-- `shared/` reusable widgets/components
-- `services/` Supabase bootstrap/provider
+The app follows the existing feature-based structure and clean layering already present in the codebase:
 
-`supabase/migrations/`
-- SQL schema, policies, triggers, and RPC functions
+- `lib/core/`
+  - routing, theme, global providers, utilities
+- `lib/features/`
+  - `auth`
+  - `home`
+  - `budget`
+  - `goals`
+  - `analysis`
+  - `profile`
+- `lib/services/`
+  - local database
+  - Supabase bootstrap
+  - sync manager / sync service
+- `supabase/migrations/`
+  - schema, triggers, guards, policies, and RPCs
 
-## Runtime Flow
+## Local-First Workflow
 
-1. `main.dart` initializes Flutter, Hive, env, and Supabase.
+This app no longer relies on direct Supabase reads from every screen interaction.
+
+Actual runtime pattern:
+- App starts
+- Hive and local database initialize
+- Supabase initializes
+- Sync bootstrap runs
+- Feature providers read from local storage first
+- If local data is missing or stale, sync pulls from Supabase
+- CRUD flows update local state and use the existing sync path
+
+Important behavior:
+- User-scoped local data is isolated per authenticated user
+- Logout clears user-scoped local cached data and sync state
+- Providers read from the same local-first repository/provider pattern across Home, Budget, Goals, Analysis, and Profile
+
+## App Flow
+
+1. `main.dart` initializes Flutter bindings, Hive, local DB, env, Supabase, and shared preferences.
 2. Router checks:
-   - first launch flag (`first_launch`) for onboarding
-   - Supabase session for authenticated routes
-3. App loads feature tabs: Home, Budget, Analysis, Goals, Profile.
+   - `first_launch`
+   - current Supabase session
+3. User sees:
+   - onboarding on first launch
+   - login/register when unauthenticated
+   - tab shell when authenticated
+4. Main tabs:
+   - Home
+   - Budget
+   - Analysis
+   - Goals
+   - Profile
 
-## Environment
+## Feature Summary
 
-Environment files:
+### Auth
+
+- Email/password login and registration
+- Google sign-in via Supabase OAuth mobile callback
+- Guarded navigation with onboarding and auth redirects
+- Improved timeout/error handling in login flow
+
+Important mobile OAuth detail:
+- Redirect URL used by app: `io.supabase.flutter://login-callback`
+
+### Home
+
+- Wallet-backed total balance
+- Portfolio card based on transaction data
+- Latest transactions
+- Pull-to-refresh style data refresh logic via sync + provider reloads
+
+### Budget
+
+- Create and edit budgets
+- Budget detail view
+- Budget progress based on linked spending logic
+- Completion state handling
+- Financial edit guards to stop invalid target reductions
+
+### Goals
+
+- Create and edit goals
+- Goal preview / detail flow
+- Goal contribution tracking
+- Goal completion handling
+- Financial edit guards to stop invalid target reductions
+
+### Analysis
+
+- Income tab
+  - total income
+  - monthly chart
+  - latest income history
+  - See More navigation
+- Expenses tab
+  - total expense
+  - category breakdown
+  - monthly chart
+  - latest expense history
+  - See More navigation
+- Saving tab
+  - saved balance
+  - completed target summary based on real goals data
+  - goals progress preview with See More
+  - budget control preview with See More
+
+### Profile
+
+- View current profile
+- Edit profile
+- Change password
+- Logout
+
+## Environment Setup
+
+Environment files in project root:
 - `.env.dev`
 - `.env.staging`
 - `.env.prod`
@@ -56,11 +161,12 @@ Required keys:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 
-`main.dart` currently loads `.env.dev` by default.
+Current default:
+- `main.dart` loads `.env.dev`
 
-## Database Overview (Supabase)
+## Supabase Database Overview
 
-Core tables:
+Primary tables:
 - `profiles`
 - `wallets`
 - `categories`
@@ -69,69 +175,83 @@ Core tables:
 - `goals`
 - `goal_contributions`
 
-Important DB behavior:
-- RLS policies for per-user access
-- New-user trigger seeds profile, wallet, and default categories
-- Wallet balance trigger syncs on transaction insert/delete
-- Goal amount trigger syncs on contribution insert/delete
-- Goal delete RPC (`delete_goal_atomic`) removes linked transactions safely
-- Budget spending RPC supports both category-based and `budget_id`-linked expenses
+Database behavior already implemented through migrations:
+- per-user RLS policies
+- profile insert policy alignment
+- new-user bootstrap behavior
+- wallet balance trigger support
+- wallet trigger update support
+- goal amount tracking
+- goal-to-transaction linkage
+- budget-to-transaction linkage
+- delete-goal atomic flow
+- financial integrity guards for edit/update flows
 
-## Development Notes
+Current migration set:
+- `01_extensions.sql`
+- `02_core_tables.sql`
+- `03_triggers_and_wallet.sql`
+- `04_goals_financial.sql`
+- `05_budget_functions.sql`
+- `06_schema_alignment.sql`
+- `07_goal_transaction_link.sql`
+- `08_goal_transaction_link.sql`
+- `09_fix_goal_transaction_cascade.sql`
+- `11_delete_goal_atomic.sql`
+- `12_budget_transaction_link.sql`
+- `13_profiles_insert_policy.sql`
+- `14_wallet_trigger_update_support.sql`
+- `15_financial_integrity_edit_guards.sql`
 
-- Keep functionality unchanged during UI alignment.
-- Use INR/rupee formatting consistently.
-- Prefer `CurrencyFormatter` instead of hardcoded currency symbols where possible.
+## Important Reliability Rules
 
-## Next Focus
+These are part of the current workflow and should be preserved when making changes:
 
-Primary next milestone: complete Profile page (data + edit flow + logout + wallet/profile settings entry points).
+- Do not bypass providers with direct UI-side Supabase calls
+- Keep aggregation logic in provider/domain layers, not inside widgets
+- Use `CurrencyFormatter` for amounts
+- Keep latest-first ordering consistent for transactions/history views
+- Respect provider invalidation patterns after CRUD
+- Preserve user isolation in local DB and sync logic
+- Do not reintroduce stale-user leakage across logins
 
-## Recent Reliability Fixes
+## Development Workflow
 
-- Removed duplicate Home transaction heading (single investment history section).
-- Added strict user data isolation in local DB queries and sync.
-- Logout now clears:
-  - user-scoped local Hive data
-  - pending sync queue for that user
-  - cached auth tokens
-  - sync session bootstrap markers
-- Login flow hardened:
-  - email/password format validation
-  - request timeout handling
-  - mounted-safe loading state reset
-  - clearer auth/network error messages
-- Sync service hardened with timeout + retry for Supabase push/pull calls.
-- Added global crash logging hooks for Flutter and platform errors.
+Typical local workflow:
 
-## QA Test Matrix
+1. Update feature/domain/provider code
+2. Run:
+   - `flutter analyze`
+   - `flutter test`
+3. If schema changes are needed:
+   - add a new migration in `supabase/migrations/`
+   - do not edit old migrations retroactively
+4. Verify:
+   - local-first reads still work
+   - sync path still works
+   - provider invalidation is correct
+   - logout/login does not leak old user data
 
-Authentication:
-- Login with valid credentials -> navigates to Home.
-- Login with invalid credentials -> error shown, loading stops.
-- Login with no/slow network -> timeout message shown, loading stops.
-- Logout -> redirected to auth flow and no prior user data remains in local cache.
-- Login with second account after logout -> balances/portfolio/goals must not show first account data.
+## Key UX / Product Decisions
 
-Portfolio/Data Isolation:
-- Home total balance equals sum of current user wallets only.
-- Budget and Goals tabs show only current user data.
-- Categories list contains only current user categories.
+- Rupee / INR formatting is the default display behavior unless another currency is stored on the record
+- Figma screenshot references are being implemented progressively without changing working business logic
+- Some non-critical buttons intentionally remain placeholders until backend/product scope is ready
 
-Sync:
-- Cold start with network -> initial sync completes, then data visible.
-- App resume/background -> sync runs without crash.
-- Temporary sync failures -> retry path logs warning and app remains responsive.
+## Known Gaps
 
-Performance:
-- Goals screen opens from local cache without forced network call.
-- No repeated loading loops when user has no goals.
+- README-level setup for iOS app naming is not documented because iOS runner files are not currently present in this workspace state
+- Some screens still rely on placeholder actions for non-core features like notifications, rebalance, and support flows
+- Test coverage should be expanded for financial integrity, sync edge cases, and auth/device scenarios
 
-## Production Hardening Backlog
+## Recommended Checks Before Release
 
-Planned next items:
-- Pull-to-refresh on Home/Budget/Goals.
-- Session expiration UX handling.
-- Offline indicator + queued operation status.
-- Automated unit/integration tests in `test/`.
-- Performance monitoring hooks and startup/load benchmarks.
+- Login/logout across multiple accounts
+- Cold start sync on fresh install
+- Budget progress correctness
+- Goal completion correctness
+- Transaction ordering latest-first
+- Keyboard-safe auth screens
+- Analysis tab summaries matching local data
+- Google OAuth redirect behavior on Android
+

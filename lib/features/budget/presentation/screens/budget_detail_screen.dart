@@ -203,7 +203,9 @@ class BudgetDetailScreen extends ConsumerWidget {
                                     style: AppTextStyles.headingSmall,
                                   ),
                                   Text(
-                                    '${liveBudget.spent >= liveBudget.amount ? 'Completed' : '$budgetPercent%'}',
+                                    liveBudget.spent >= liveBudget.amount
+                                        ? 'Completed'
+                                        : '$budgetPercent%',
                                     style: AppTextStyles.bodySmall.copyWith(
                                       color: liveBudget.spent >= liveBudget.amount
                                           ? AppColors.primaryDark

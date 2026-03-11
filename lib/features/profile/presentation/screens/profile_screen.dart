@@ -392,10 +392,10 @@ class _ProfileHeader extends StatelessWidget {
         children: [
           Stack(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 44,
                 backgroundColor: AppColors.divider,
-                backgroundImage: const NetworkImage(_sampleAvatarUrl),
+                backgroundImage: NetworkImage(_sampleAvatarUrl),
               ),
               Positioned(
                 right: -2,

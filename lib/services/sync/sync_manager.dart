@@ -57,6 +57,13 @@ class SyncManager {
       if (authEvent == AuthChangeEvent.signedIn ||
           authEvent == AuthChangeEvent.tokenRefreshed ||
           authEvent == AuthChangeEvent.userUpdated) {
+        _ref.read(initialSyncStateProvider.notifier).state = InitialSyncState.syncing;
+        _ref.invalidate(walletProvider);
+        _ref.invalidate(transactionProvider);
+        _ref.invalidate(categoryProvider);
+        _ref.invalidate(budgetListProvider);
+        _ref.invalidate(goalsProvider);
+        _ref.invalidate(profileProvider);
         await _runInitialSyncAndRefresh();
       } else if (authEvent == AuthChangeEvent.signedOut) {
         _ref.read(syncServiceProvider).resetSession();

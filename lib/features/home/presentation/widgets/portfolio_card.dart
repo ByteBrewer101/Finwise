@@ -120,7 +120,7 @@ class _PortfolioCardState extends State<PortfolioCard> {
       points.add(FlSpot(points.length.toDouble(), running));
     }
 
-    final window = 12;
+    const window = 12;
     if (points.length > window) {
       final sliced = points.sublist(points.length - window);
       return [

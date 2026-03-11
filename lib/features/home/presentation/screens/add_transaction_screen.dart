@@ -168,26 +168,39 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              DropdownButtonFormField<TransactionType>(
-                initialValue: _type,
-                items: const [
-                  DropdownMenuItem(
-                    value: TransactionType.expense,
-                    child: Text('Expense'),
-                  ),
-                  DropdownMenuItem(
-                    value: TransactionType.income,
-                    child: Text('Income'),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _type = value!;
-                    if (_type != TransactionType.expense) {
-                      _selectedBudgetId = null;
-                    }
-                  });
-                },
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _TypeTabButton(
+                        label: 'Income',
+                        selected: _type == TransactionType.income,
+                        onTap: () {
+                          setState(() {
+                            _type = TransactionType.income;
+                            _selectedBudgetId = null;
+                          });
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: _TypeTabButton(
+                        label: 'Expenses',
+                        selected: _type == TransactionType.expense,
+                        onTap: () {
+                          setState(() {
+                            _type = TransactionType.expense;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               walletsAsync.when(
@@ -215,7 +228,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       DropdownButtonFormField<String>(
-                        value: _selectedWalletId,
+                        initialValue: _selectedWalletId,
                         items: wallets
                             .map(
                               (wallet) => DropdownMenuItem(
@@ -264,7 +277,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         DropdownButtonFormField<String?>(
-                          value: _selectedBudgetId,
+                          initialValue: _selectedBudgetId,
                           items: [
                             const DropdownMenuItem<String?>(
                               value: null,
@@ -380,6 +393,42 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeTabButton extends StatelessWidget {
+  const _TypeTabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.body.copyWith(
+            color: selected ? Colors.white : AppColors.textMuted,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
       ),
