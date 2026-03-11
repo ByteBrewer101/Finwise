@@ -48,3 +48,5 @@ app.*.map.json
 .env.dev
 .env.staging
 .env.prod
+.env
+.env.*
