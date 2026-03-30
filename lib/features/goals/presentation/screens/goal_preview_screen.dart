@@ -7,6 +7,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../providers/goal_detail_providers.dart';
+import '../utils/goal_investment_recommendation_engine.dart';
+import '../widgets/goal_investment_recommendation_sheet.dart';
 import 'add_contribution_bottom_sheet.dart';
 import 'edit_goal_screen.dart';
 
@@ -36,6 +38,25 @@ class GoalPreviewScreen extends ConsumerWidget {
         title: const Text('Preview Goals'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              final recommendation =
+                  GoalInvestmentRecommendationEngine.pickForGoalAmount(
+                goal.targetAmount,
+              );
+
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => GoalInvestmentRecommendationSheet(
+                  goal: goal,
+                  recommendation: recommendation,
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: () {
