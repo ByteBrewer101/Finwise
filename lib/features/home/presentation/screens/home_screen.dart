@@ -19,6 +19,7 @@ import '../../domain/models/portfolio_summary.dart';
 import '../widgets/home_header.dart';
 import '../widgets/balance_section.dart';
 import '../widgets/portfolio_card.dart';
+import '../widgets/recommendation_section.dart';
 import '../widgets/transaction_section.dart';
 import 'add_transaction_screen.dart';
 import 'all_transactions_screen.dart';
@@ -149,25 +150,18 @@ class HomeScreen extends ConsumerWidget {
                             summary: portfolioSummary,
                             transactions: transactions,
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.lg),
+                          const RecommendationSection(),
+                          const SizedBox(height: AppSpacing.lg),
                           _HomeCategories(
                             onInvestmentsTap: () => context.go(AppRoutes.budget),
                             onMarketsTap: showComingSoon,
                             onSavingsTap: () => context.go(AppRoutes.analysis),
                             onGoalsTap: () => context.go(AppRoutes.goals),
-                            onSeeMoreTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const AllTransactionsScreen(),
-                                ),
-                              );
-                            },
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.lg),
                           TransactionSection(
                             transactions: transactions,
-                            showHeader: false,
                             onSeeMore: () {
                               Navigator.push(
                                 context,
@@ -196,14 +190,12 @@ class _HomeCategories extends StatelessWidget {
   final VoidCallback onMarketsTap;
   final VoidCallback onSavingsTap;
   final VoidCallback onGoalsTap;
-  final VoidCallback onSeeMoreTap;
 
   const _HomeCategories({
     required this.onInvestmentsTap,
     required this.onMarketsTap,
     required this.onSavingsTap,
     required this.onGoalsTap,
-    required this.onSeeMoreTap,
   });
 
   @override
@@ -286,29 +278,6 @@ class _HomeCategories extends StatelessWidget {
                 label: 'Goals',
                 icon: Icons.show_chart,
                 onTap: onGoalsTap,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Investment History', style: AppTextStyles.headingLarge),
-                  Text('This month', style: AppTextStyles.body.copyWith(color: AppColors.textMuted)),
-                ],
-              ),
-              GestureDetector(
-                onTap: onSeeMoreTap,
-                child: Text(
-                  'See More',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
               ),
             ],
           ),
