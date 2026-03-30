@@ -11,60 +11,80 @@ const List<StockRecommendation> kStockRecommendations = [
     sector: 'NBFC',
     performance: '~3400% in 10 years',
     source: 'Ventura Securities',
+    logoText: 'BF',
+    logoBackgroundColor: Color(0xFF0B4F6C),
   ),
   StockRecommendation(
     name: 'Titan Company',
     sector: 'Consumer / Jewellery',
     performance: '~1500% in 10 years',
     source: 'Ventura',
+    logoText: 'T',
+    logoBackgroundColor: Color(0xFF6B3FA0),
   ),
   StockRecommendation(
     name: 'Reliance Industries',
     sector: 'Conglomerate',
     performance: '~515% in 10 years',
     source: 'Ventura',
+    logoText: 'RIL',
+    logoBackgroundColor: Color(0xFF0F766E),
   ),
   StockRecommendation(
     name: 'TCS',
     sector: 'IT',
     performance: '~600% in 10 years',
     source: 'Ventura',
+    logoText: 'TCS',
+    logoBackgroundColor: Color(0xFFE95C2B),
   ),
   StockRecommendation(
     name: 'Infosys',
     sector: 'IT',
     performance: '~400% in 10 years',
     source: 'Ventura',
+    logoText: 'INFY',
+    logoBackgroundColor: Color(0xFF2563EB),
   ),
   StockRecommendation(
     name: 'HDFC Bank',
     sector: 'Banking',
     performance: '~300% in 10 years',
     source: 'Ventura',
+    logoText: 'HDFC',
+    logoBackgroundColor: Color(0xFF1D4ED8),
   ),
   StockRecommendation(
     name: 'Asian Paints',
     sector: 'FMCG / Paints',
     performance: '~182% in 10 years',
     source: 'Ventura',
+    logoText: 'AP',
+    logoBackgroundColor: Color(0xFFE11D48),
   ),
   StockRecommendation(
     name: 'Kotak Mahindra Bank',
     sector: 'Banking',
     performance: '~18%+ CAGR for a decade',
     source: 'Samco',
+    logoText: 'KMB',
+    logoBackgroundColor: Color(0xFFDC2626),
   ),
   StockRecommendation(
     name: 'Maruti Suzuki',
     sector: 'Auto',
     performance: '~18% CAGR over 10 years',
     source: 'Samco',
+    logoText: 'MS',
+    logoBackgroundColor: Color(0xFF1E40AF),
   ),
   StockRecommendation(
     name: 'HCL Technologies',
     sector: 'IT',
     performance: '~400% in 10 years',
     source: 'Ventura',
+    logoText: 'HCL',
+    logoBackgroundColor: Color(0xFF7C3AED),
   ),
 ];
 
@@ -127,11 +147,12 @@ class _RecommendationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              _RecommendationLogo(recommendation: recommendation),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
                   recommendation.name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -139,7 +160,14 @@ class _RecommendationCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
                   recommendation.sector,
                   maxLines: 1,
@@ -170,6 +198,34 @@ class _RecommendationCard extends StatelessWidget {
             style: AppTextStyles.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RecommendationLogo extends StatelessWidget {
+  const _RecommendationLogo({required this.recommendation});
+
+  final StockRecommendation recommendation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: recommendation.logoBackgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        recommendation.logoText,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: recommendation.logoForegroundColor,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

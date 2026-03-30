@@ -7,8 +7,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/models/goal.dart';
 import '../models/investment_recommendation.dart';
+import '../utils/goal_investment_recommendation_engine.dart';
 
-class GoalInvestmentRecommendationSheet extends StatelessWidget {
+class GoalInvestmentRecommendationSheet extends StatefulWidget {
   const GoalInvestmentRecommendationSheet({
     super.key,
     required this.goal,
@@ -17,6 +18,15 @@ class GoalInvestmentRecommendationSheet extends StatelessWidget {
 
   final Goal goal;
   final InvestmentRecommendation recommendation;
+
+  @override
+  State<GoalInvestmentRecommendationSheet> createState() =>
+      _GoalInvestmentRecommendationSheetState();
+}
+
+class _GoalInvestmentRecommendationSheetState
+    extends State<GoalInvestmentRecommendationSheet> {
+  late InvestmentRecommendation _recommendation;
 
   static const Map<String, Color> _segmentColors = {
     'SIP': AppColors.primary,
@@ -27,8 +37,23 @@ class GoalInvestmentRecommendationSheet extends StatelessWidget {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _recommendation = widget.recommendation;
+  }
+
+  void _rebalance() {
+    setState(() {
+      _recommendation = GoalInvestmentRecommendationEngine.pickAnotherForGoalAmount(
+        widget.goal.targetAmount,
+        current: _recommendation,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final allocations = recommendation.allocations;
+    final allocations = _recommendation.allocations;
 
     return SafeArea(
       top: false,
@@ -65,7 +90,7 @@ class GoalInvestmentRecommendationSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                goal.name,
+                widget.goal.name,
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -82,12 +107,12 @@ class GoalInvestmentRecommendationSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      recommendation.title,
+                      _recommendation.title,
                       style: AppTextStyles.headingSmall,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Target: ${CurrencyFormatter.format(amount: goal.targetAmount, currency: goal.currency)}',
+                      'Target: ${CurrencyFormatter.format(amount: widget.goal.targetAmount, currency: widget.goal.currency)}',
                       style: AppTextStyles.bodySmall,
                     ),
                   ],
@@ -155,6 +180,25 @@ class GoalInvestmentRecommendationSheet extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _rebalance,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    textStyle: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: const Text('Rebalance'),
                 ),
               ),
             ],

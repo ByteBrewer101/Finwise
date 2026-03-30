@@ -36,4 +36,28 @@ class GoalInvestmentRecommendationEngine {
     final picker = random ?? Random();
     return recommendations[picker.nextInt(recommendations.length)];
   }
+
+  static InvestmentRecommendation pickAnotherForGoalAmount(
+    double targetAmount, {
+    required InvestmentRecommendation current,
+    Random? random,
+  }) {
+    final segment = segmentForAmount(targetAmount);
+    final recommendations = goalInvestmentRecommendations[segment] ?? const [];
+
+    if (recommendations.length <= 1) {
+      return current;
+    }
+
+    final alternatives = recommendations
+        .where((recommendation) => recommendation.title != current.title)
+        .toList();
+
+    if (alternatives.isEmpty) {
+      return current;
+    }
+
+    final picker = random ?? Random();
+    return alternatives[picker.nextInt(alternatives.length)];
+  }
 }
